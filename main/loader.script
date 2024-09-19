@@ -1,0 +1,13 @@
+function init()
+	msg.post("#example_proxy", "load")
+	msg.post(".", "acuire_input_focues")
+end
+
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("proxy_loaded") then
+		-- New world is loaded. Init and enable it.
+		msg.post(sender, "init")
+		msg.post(sender, "enable")
+	end
+end
