@@ -1,8 +1,8 @@
 Object = require "modules/classic"
 
-Canvace = Object:extend()
+Canvas = Object:extend()
 
-function Canvace:new(width, height, sprite)
+function Canvas:new(width, height, sprite)
   self.sprite = sprite
   self.width = width
   self.height = height
@@ -10,7 +10,7 @@ function Canvace:new(width, height, sprite)
 end
 
 
-function Canvace:init()
+function Canvas:init()
     msg.post(".", "acquire_input_focus")
     msg.post("@render:", "clear_color", {color = vmath.vector4(1, 1, 1, 1)})
     -- size of texture when scaled to nearest power of two
@@ -53,7 +53,7 @@ local function point_within_rectangle_centroid(point_x, point_y, rectangle_x, re
 end
 
 
-function Canvace:update(dt)
+function Canvas:update(dt)
   -- update texture if it's dirty (ie we've drawn to it)
   if self.dirty then
     resource.set_texture(self.resource_path, self.header, self.buffer_info.buffer)
@@ -81,7 +81,8 @@ local function to_string_vector(vector)
   return vector.x .. "; " .. vector.y .. "; " .. vector.z
 end
 
-function Canvace:draw_line(x, y)
+
+function Canvas:draw_line(x, y)
   local world_pos = go.get_world_position()
   local pos = vmath.vector3(x - world_pos.x + self.width/2, y - world_pos.y + self.height/2, 0)
 
@@ -113,11 +114,12 @@ function Canvace:draw_line(x, y)
   end
 end
 
+
 ---@param pressed bool
 ---@param released bool
 ---@param x float 
 ---@param y float 
-function Canvace:_reigster_input(pressed, released, x, y)
+function Canvas:_reigster_input(pressed, released, x, y)
   if pressed then self.drawing = true
   elseif released then self.drawing = false end
 
@@ -132,18 +134,18 @@ function Canvace:_reigster_input(pressed, released, x, y)
   end 
 end
 
-function Canvace:on_input(action_id, action)
+
+function Canvas:on_input(action_id, action)
   -- if action_id == hash("touch") then
   --   self:_reigster_input(action.pressed, action.released, action.x, action.y)
   --   print("draw")
   -- end
   if action_id == hash("multi_touch") then
     for _, touchdata in ipairs(action.touch) do
-      print("draw")
       self:_reigster_input(touchdata.pressed, touchdata.released, touchdata.x, touchdata.y)
     end
   end
 end
 
 
-return Canvace
+return Canvas
