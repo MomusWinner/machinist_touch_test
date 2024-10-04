@@ -1,0 +1,23 @@
+Object = require "modules/classic"
+
+Person = Object:extend()
+
+function Person:new(first_name, last_name)
+	self.firstName = first_name
+	self.lastame = last_name
+end
+
+function Person:getName()
+	return self.firstName
+end	
+
+function init(self)
+	-- m = {width = 100, height = 200, print_info = function () print(self.width .. " " .. self.height) end}
+	-- print(m.width)
+	-- m.print_info()
+	vasya = Person("Вася", "Пупкин")
+	print(vasya)
+	print(vasya.firstName)    --> результат: Вася
+	print(vasya:getName())  --> результат: Вася
+	
+end	

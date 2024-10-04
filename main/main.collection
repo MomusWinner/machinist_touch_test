@@ -1,16 +1,56 @@
 name: "main"
 scale_along_z: 0
 embedded_instances {
-  id: "loader"
+  id: "left_canvace"
   data: "components {\n"
-  "  id: \"loader\"\n"
-  "  component: \"/main/loader.script\"\n"
+  "  id: \"left_canvace\"\n"
+  "  component: \"/main/left_canvace.script\"\n"
   "}\n"
   "embedded_components {\n"
-  "  id: \"example_proxy\"\n"
-  "  type: \"collectionproxy\"\n"
-  "  data: \"collection: \\\"/example/example.collection\\\"\\n"
+  "  id: \"left_sprite\"\n"
+  "  type: \"sprite\"\n"
+  "  data: \"default_animation: \\\"fullscreen512_left\\\"\\n"
+  "material: \\\"/builtins/materials/sprite.material\\\"\\n"
+  "textures {\\n"
+  "  sampler: \\\"texture_sampler\\\"\\n"
+  "  texture: \\\"/main/left_canvas.atlas\\\"\\n"
+  "}\\n"
   "\"\n"
+  "}\n"
+  ""
+  position {
+    x: 260.0
+    y: 260.0
+  }
+}
+embedded_instances {
+  id: "right_canvace"
+  data: "components {\n"
+  "  id: \"right_canvace\"\n"
+  "  component: \"/main/right_canvace.script\"\n"
+  "}\n"
+  "embedded_components {\n"
+  "  id: \"right_sprite\"\n"
+  "  type: \"sprite\"\n"
+  "  data: \"default_animation: \\\"fullscreen512_right\\\"\\n"
+  "material: \\\"/builtins/materials/sprite.material\\\"\\n"
+  "textures {\\n"
+  "  sampler: \\\"texture_sampler\\\"\\n"
+  "  texture: \\\"/main/right_canvas.atlas\\\"\\n"
+  "}\\n"
+  "\"\n"
+  "}\n"
+  ""
+  position {
+    x: 1663.0
+    y: 258.0
+  }
+}
+embedded_instances {
+  id: "_"
+  data: "components {\n"
+  "  id: \"_\"\n"
+  "  component: \"/main/_.gui\"\n"
   "}\n"
   ""
 }

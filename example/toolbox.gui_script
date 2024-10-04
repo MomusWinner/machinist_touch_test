@@ -50,6 +50,7 @@ function init(self)
   msg.post("canvas", "acquire_input_focus")
   msg.post("gui", "acquire_input_focus")
   self.nodes = {}
+  print("init")
 
   self.nodes[gui.get_node("pencil")] = use_pencil
   self.nodes[gui.get_node("eraser")] = use_eraser
@@ -70,6 +71,7 @@ end
 
 function on_input(self, action_id, action)
   if action_id == hash("touch") then
+    print(action.touch)
     if action.pressed or action.released then
       for node, fn in pairs(self.nodes) do
         if gui.pick_node(node, action.x, action.y) then
