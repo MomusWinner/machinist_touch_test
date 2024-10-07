@@ -9,6 +9,7 @@ input_method = HiddenInputField
 
 [project]
 title = machinist_touch_test
+custom_resources = /shapes
 dependencies#0 = https://github.com/AGulev/drawpixels/archive/refs/tags/2.0.1.zip
 
 [display]
