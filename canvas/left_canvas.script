@@ -1,12 +1,22 @@
-Canvas = require "canvas.canvas"
+Drawer = require "canvas.canvas"
+canvas_data = require "canvas.canvas_data"
 
 function init(self)
-    self.canvas = Canvas(512, 512, "#left_sprite")
-end 
+    print("init left")
+    self.canvas = Drawer(512, 512, "#left_sprite")
+    canvas_data.left_canvas = self.canvas
+end
+
+
+function on_message(self, message_id, message, sender)
+    self.canvas:on_message(message_id, message, sender)
+end
+
 
 function update(self, dt)
     self.canvas:update(dt)
 end
+
 
 function on_input(self, action_id, action)
     self.canvas:on_input(action_id, action)

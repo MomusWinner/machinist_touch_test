@@ -1,0 +1,56 @@
+canvas_data = require "canvas.canvas_data"
+register_shapes = require "shapes/register_shapes"
+utils = require "modules/utils"
+
+LEFT_CANVAS = "left_canvas#left_canvas"
+RIGHT_CANVAS = "right_canvas#right_canvas"
+SHAPES_FOLDER = "/shapes"
+
+function init(self)
+	msg.post(LEFT_CANVAS, "get_canvas")
+	msg.post(RIGHT_CANVAS, "get_canvas")
+	self.initialized = false
+	start_game(self)
+end
+
+function update(self, dt)
+	-- Initialization
+	if not self.initialized and is_init(self) then self.initialized = true
+	else return end
+
+end
+
+local function choose_random_shape()
+	local shapes = register_shapes:get_shapes()
+	math.randomseed(os.time())
+	local rand_index = math.random(1, utils.len(shapes))
+	return shapes[rand_index]
+end
+
+function start_game(self)
+	self.shape = choose_random_shape()
+	local init_data = {}
+	init_data.poin_scheme = json.decode(sys.load_resource(self.shape.path_to_scheme))
+	print(init_data.poin_scheme)
+	-- init_data.projection = sys.load_resource(self.shape.path_to_projection)
+	init_data.name = self.shape.name
+	msg.post(RIGHT_CANVAS, "start_canvas", init_data)
+end
+
+function is_init(self)
+	if self.right_canvas ~= nil and self.left_canvac ~= nil then
+		return true
+	end
+	return false
+end
+
+function on_message(self, message_id, message, sender)
+	if hash("left_canvas") == message_id then
+		print("register left canvas")
+		print(canvas_data.left_canvas)
+		self.left_canvas = message.left_canvas
+	elseif hash("right_canvas") == message_id then
+		print("register right canvas")
+		self.right_canvas = message.right_canvas
+	end
+end

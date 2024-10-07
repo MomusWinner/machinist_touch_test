@@ -1,150 +1,63 @@
-Object = require "modules/classic"
+Drawer = require "canvas.drawer"
+helper = require "canvas.canvas_helper"
+utils = require "modules/utils"
 
-Canvas = Object:extend()
+Canvas = Drawer:extend()
 
 function Canvas:new(width, height, sprite)
-  self.sprite = sprite
-  self.width = width
-  self.height = height
-  self:init()
+  Drawer.super.new(self, width, height, sprite)
 end
 
 
-function Canvas:init()
-    msg.post(".", "acquire_input_focus")
-    msg.post("@render:", "clear_color", {color = vmath.vector4(1, 1, 1, 1)})
-    -- size of texture when scaled to nearest power of two
-    local channels = 4
-    -- we have to create table with next fields: buffer, width, height, channels
-    self.buffer_info = {
-        buffer = buffer.create(self.width * self.height, {{name = hash("rgba"), type = buffer.VALUE_TYPE_UINT8, count = channels}}),
-        width = self.width,
-        height = self.height,
-        channels = channels -- 3 for rgb, 4 for rgba
-    }
-    self.dirty = true
-    self.current_color = vmath.vector4(0, 0, 0, 1)
-    self.current_tool = "pencil"
-
-    -- drawing params
-    self.prev_pos = nil
-    self.resource_path = go.get(self.sprite, "texture0")
-    self.header = {
-        width = self.width,
-        height = self.height,
-        type = resource.TEXTURE_TYPE_2D,
-        format = resource.TEXTURE_FORMAT_RGBA,
-        num_mip_maps = 1
-    }
-    self.rotation = 0
-    drawpixels.line(self.buffer_info, 0, 0, 1000, 1000, 0, 0, 0, 1, true, 10)
-end
-
-
-local function point_within_rectangle_centroid(point_x, point_y, rectangle_x, rectangle_y, rectangle_width, rectangle_height)
-  local width_half = rectangle_width / 2
-  local height_half = rectangle_height / 2
-  if point_x >= (rectangle_x - width_half) and point_x <= (rectangle_x + width_half) then
-    if point_y >= (rectangle_y - height_half) and point_y <= (rectangle_y + height_half) then
-      return true
-    end
-  end
-  return false
-end
-
-
-function Canvas:update(dt)
-  -- update texture if it's dirty (ie we've drawn to it)
-  if self.dirty then
-    resource.set_texture(self.resource_path, self.header, self.buffer_info.buffer)
-    self.dirty = false
-  end
-  self.rotation = self.rotation + 1
-  if self.rotation > 360 then
-    self.rotation = 0
-  end
-end
-
-
-local function color_vector_to_bytes(color)
-  return color.x * 255, color.y * 255, color.z * 255, color.w * 255
-end
-
-
-local function bytes_to_color_vector(r, g, b, a)
-  return vmath.vector4(r / 255, g / 255, b / 255, a / 255)
-end
-
----@param vector vector3
----@return unknown
-local function to_string_vector(vector)
-  return vector.x .. "; " .. vector.y .. "; " .. vector.z
-end
-
-
-function Canvas:draw_line(x, y)
+function Canvas:_cube_pos_to_global(x, y)
   local world_pos = go.get_world_position()
-  local pos = vmath.vector3(x - world_pos.x + self.width/2, y - world_pos.y + self.height/2, 0)
-
-  local length = 1
-  local dir = vmath.vector3(0)
-  if self.prev_pos ~= nil then
-    local new_length = math.ceil(vmath.length(pos - self.prev_pos))
-    if new_length ~= 0 then
-      -- calculate the length and direction from the previous touch
-      -- position to the current position
-      length = new_length
-      dir = vmath.normalize(pos - self.prev_pos)
-    end
-  end
- 
-  if self.prev_pos == pos then
-    return false
-  end
-
-  self.prev_pos = pos
-  -- use current tool from the previous touch position to
-  -- the current touch local world_pos = go.get_world_position()position0
-  while length > 0 do
-    local r, g, b, a = color_vector_to_bytes(self.current_color)
-    drawpixels.filled_circle(self.buffer_info, pos.x, pos.y, 10, r, g, b, a, true)
-    self.dirty = true
-    pos = pos - dir
-    length = length - 1
-  end
+  return vmath.vector3(world_pos.x - self.width/2 + x, world_pos.y - self.height/2 + y, 0)
 end
 
 
----@param pressed bool
----@param released bool
----@param x float 
----@param y float 
-function Canvas:_reigster_input(pressed, released, x, y)
-  if pressed then self.drawing = true
-  elseif released then self.drawing = false end
-
-  if self.drawing == false then
-    self.prev_pos = nil
+function Canvas:clean_points()
+  if self.points == nil then
+    self.points = {}
     return
-  end
-
-  local world_pos = go.get_world_position()
-  if point_within_rectangle_centroid(x, y, world_pos.x, world_pos.y, self.width, self.height) then
-    self:draw_line(x, y)
+  else
+    self.points = {} -- TODO remove old points
   end 
 end
 
 
-function Canvas:on_input(action_id, action)
-  -- if action_id == hash("touch") then
-  --   self:_reigster_input(action.pressed, action.released, action.x, action.y)
-  --   print("draw")
-  -- end
-  if action_id == hash("multi_touch") then
-    for _, touchdata in ipairs(action.touch) do
-      self:_reigster_input(touchdata.pressed, touchdata.released, touchdata.x, touchdata.y)
-    end
+function Canvas:creat_points(points)
+  self:clean_points()
+  for _, point in ipairs(points) do
+    print("x: " .. point.x .. " y: " .. point.y)
+    local id = factory.create("#point_factory", self:_cube_pos_to_global(point.x, point.y), nil)
+    table.insert(self.points, id)
   end
+end
+
+
+---@param name string
+---@param schema table
+---@param projection any
+function Canvas:start_canvas(name, schema, projection)
+  print("Start " .. name)
+  self:creat_points(schema.points)
+end
+
+
+function Canvas:on_message(message_id, message, sender)
+  if message_id == hash("start_canvas") then
+    self:start_canvas(message.name, message.poin_scheme, message.projection)
+  end
+end
+
+
+function Canvas:update(dt)
+  Drawer.super.update(self, dt)
+end
+
+
+function Canvas:on_input(action_id, action)
+  Drawer.super.on_input(self, action_id, action)
 end
 
 
