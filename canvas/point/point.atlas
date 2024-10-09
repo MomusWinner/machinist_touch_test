@@ -1,1 +1,4 @@
+images {
+  image: "/canvas/point/blue_cable_point.png"
+}
 extrude_borders: 2

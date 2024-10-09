@@ -48,10 +48,36 @@ end
 ---@return integer
 function M.len(table)
   local length = 0
-
   for _, _ in pairs(table) do length = length + 1 end
-
   return length
 end
+
+
+function M.has_value(table, target)
+  for index, value in ipairs(table) do
+    if value == target then return true end
+  end
+  return false
+end
+
+
+---@param vector1 vector3
+---@param vector2 vector3
+---@return float angle
+function M.angle_between_vector(vector1, vector2)
+  -- local a = vmath.dot(vector1, vector2)
+  -- local b = vmath.length_sqr(vector1) * vmath.length_sqr(vector2)
+  -- print("a" .. a)
+  -- print("b" .. b)
+  -- local c = 0
+  -- if  math.abs(a) < 0.001 then
+  --   c = 0
+  -- else
+  --   c = a/b
+  -- end
+  -- return math.deg(math.acos(c))
+  return math.deg(math.atan2(vector1.y, vector1.x))  - math.deg(math.atan2(vector2.y, vector2.x))
+end
+
 
 return M

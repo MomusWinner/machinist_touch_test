@@ -15,6 +15,7 @@ end
 function Drawer:init()
     msg.post(".", "acquire_input_focus")
     msg.post("@render:", "clear_color", {color = vmath.vector4(1, 1, 1, 1)})
+
     -- size of texture when scaled to nearest power of two
     local channels = 4
     -- we have to create table with next fields: buffer, width, height, channels
@@ -39,7 +40,7 @@ function Drawer:init()
         num_mip_maps = 1
     }
     self.rotation = 0
-    drawpixels.line(self.buffer_info, 0, 0, 1000, 1000, 0, 0, 0, 1, true, 10)
+   
 end
 
 
@@ -118,7 +119,6 @@ end
 function Drawer:on_input(action_id, action)
   if action_id == hash("touch") then
     self:_reigster_input(action.pressed, action.released, action.x, action.y)
-    print("draw")
   end
   if action_id == hash("multi_touch") then
     for _, touchdata in ipairs(action.touch) do
