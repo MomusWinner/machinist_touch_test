@@ -8,4 +8,9 @@ embedded_components {
   "  texture: \"/canvas/point/point.atlas\"\n"
   "}\n"
   ""
+  scale {
+    x: 0.3
+    y: 0.3
+    z: 0.3
+  }
 }

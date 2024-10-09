@@ -10,7 +10,7 @@ embedded_components {
   "size_mode: SIZE_MODE_MANUAL\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
-  "  texture: \"/shapes/square/square.atlas\"\n"
+  "  texture: \"/shapes/projection.atlas\"\n"
   "}\n"
   ""
 }

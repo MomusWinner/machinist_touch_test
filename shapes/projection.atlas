@@ -1,3 +1,4 @@
 images {
   image: "/shapes/square/square.png"
 }
+extrude_borders: 2

@@ -5,8 +5,8 @@ utils = require "modules/utils"
 
 Canvas = Drawer:extend()
 
-CORRRECT_DIR_ANGLE = 30
-DESTINATION_TO_POINT_DISTANSE = 30
+CORRRECT_DIR_ANGLE = 90
+DESTINATION_TO_POINT_DISTANSE = 45
 
 function Canvas:new(width, height, sprite)
   Drawer.super.new(self, width, height, sprite)
@@ -15,10 +15,11 @@ function Canvas:new(width, height, sprite)
   self.current_point = nil
   self.next_point = nil
 
-  self.touch_controller = TouchController(3)
+  self.touch_controller = TouchController(10)
 
   self.current_touch_pos = vmath.vector3(0,0,0)
   self.is_pressing = false
+  self.pointer_incide_point = false
 end
 
 
@@ -74,11 +75,14 @@ function Canvas:update(dt)
   if self.next_point == nil then
     self:try_select_first_next_point()
   end
+
+  -- TODO need optimization
   if self.current_point ~= nil and self.next_point ~= nil and self.touch_controller.dir ~= nil then
     is_correct_path = self:is_correct_movement_direction()
     if is_correct_path then
+      msg.post("#bg", "play_animation", {id = hash("draw_background")})
     else
-      -- print("GAME OVER")
+      msg.post("#bg", "play_animation", {id = hash("red_background")})
     end
   end
 
@@ -101,7 +105,6 @@ function Canvas:on_input(action_id, action)
     elseif action.pressed then
       self.is_pressing = true
     end
-
     self.current_touch_pos = vmath.vector3(action.x, action.y, 0)
   end
 end
@@ -157,7 +160,6 @@ end
 function Canvas:set_new_next_point()
   print("set new next point")
   for _, id in ipairs(self.next_point.relation) do
-    
     if id ~= self.current_point.id then
       self.current_point = self.next_point
       self.next_point = self:get_point_by_id(id)
