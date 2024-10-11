@@ -15,4 +15,5 @@ dependencies#0 = https://github.com/AGulev/drawpixels/archive/refs/tags/2.0.1.zi
 [display]
 width = 1920
 height = 1080
+high_dpi = 1
 
