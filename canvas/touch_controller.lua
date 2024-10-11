@@ -17,37 +17,27 @@ function TouchController:new(count)
 end
 
 
-function TouchController:on_input(action_id, action)
-    if action_id == hash("touch") then
-        print("on_input")
-        if action.released then
-            self:clear_inputs() -- TODO invoked for left and right canvas
-            self.dir = nil
-        elseif action.pressed then
-            -- some logic
-        end
-
-        local new_input = vmath.vector3(action.x, action.y, 0)
-        if new_input == self.inputs[self:previous_index()] then
-            return
-        end
-        self.inputs[self:next_index()] = new_input
-        self.index = self:next_index()
-
-        self:calculate_dir()
-        if self.dir == nil then
-           print("new_dir is null") 
-        else
-            print("new_dir  " .. self.dir)
-        end
+function TouchController:set_input(input)
+    if input.released then
+        self:reset() -- TODO invoked for left and right canvas
+    elseif input.pressed then
+        -- some logic
     end
+
+    local new_input = vmath.vector3(input.x, input.y, 0)
+    if new_input == self.inputs[self:previous_index()] then
+        return
+    end
+    self.inputs[self:next_index()] = new_input
+    self.index = self:next_index()
+
+    self:calculate_dir()
 end
 
 
 function TouchController:calculate_dir()
     if not self:is_inited() then
         self.dir = nil
-        print("is not inited")
         return
     end
 
@@ -105,10 +95,11 @@ function TouchController:next_index(index)
 end
 
 
-function TouchController:clear_inputs()
+function TouchController:reset()
     for k, _ in pairs(self.inputs) do
         self.inputs[k] = nil
     end
+    self.dir = nil
 end
 
 

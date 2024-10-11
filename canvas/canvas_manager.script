@@ -24,17 +24,23 @@ local function choose_random_shape()
 	local shapes = register_shapes:get_shapes()
 	math.randomseed(os.time())
 	local rand_index = math.random(1, utils.len(shapes))
+	rand_index = 2
 	return shapes[rand_index]
 end
 
 function start_game(self)
-	self.shape = choose_random_shape()
+	local shape = choose_random_shape()
 	local init_data = {}
-	init_data.poin_scheme = json.decode(sys.load_resource(self.shape.path_to_scheme))
-	print(init_data.poin_scheme)
-	-- init_data.projection = sys.load_resource(self.shape.path_to_projection)
-	init_data.name = self.shape.name
+	init_data.poin_scheme = json.decode(sys.load_resource(shape.path_to_scheme))
+	init_data.name = shape.name
+	init_data.projection = shape.projection_id
 	msg.post(RIGHT_CANVAS, "start_canvas", init_data)
+	local shape = choose_random_shape()
+	local init_data = {}
+	init_data.poin_scheme = json.decode(sys.load_resource(shape.path_to_scheme))
+	init_data.name = shape.name
+	init_data.projection = shape.projection_id
+	msg.post(LEFT_CANVAS, "start_canvas", init_data)
 end
 
 function is_init(self)

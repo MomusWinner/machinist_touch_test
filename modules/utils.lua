@@ -65,18 +65,12 @@ end
 ---@param vector2 vector3
 ---@return float angle
 function M.angle_between_vector(vector1, vector2)
-  -- local a = vmath.dot(vector1, vector2)
-  -- local b = vmath.length_sqr(vector1) * vmath.length_sqr(vector2)
-  -- print("a" .. a)
-  -- print("b" .. b)
-  -- local c = 0
-  -- if  math.abs(a) < 0.001 then
-  --   c = 0
-  -- else
-  --   c = a/b
-  -- end
-  -- return math.deg(math.acos(c))
-  return math.deg(math.atan2(vector1.y, vector1.x))  - math.deg(math.atan2(vector2.y, vector2.x))
+  local angle = math.deg(math.atan2(vector1.y, vector1.x))  - math.deg(math.atan2(vector2.y, vector2.x))
+  angle = math.abs(angle)
+  if angle > 180 then
+    return 360 - angle
+  end
+  return angle
 end
 
 
