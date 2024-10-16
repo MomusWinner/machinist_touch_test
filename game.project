@@ -1,5 +1,6 @@
 [bootstrap]
 main_collection = /main/main.collectionc
+render = /orthographic/render/orthographic.renderc
 
 [script]
 shared_state = 1
@@ -11,9 +12,11 @@ input_method = HiddenInputField
 title = machinist_touch_test
 custom_resources = /shapes
 dependencies#0 = https://github.com/AGulev/drawpixels/archive/refs/tags/2.0.1.zip
+dependencies#1 = https://github.com/britzl/defold-orthographic/archive/refs/tags/3.3.2.zip
+dependencies#2 = https://github.com/Insality/druid/archive/refs/tags/0.11.0.zip
 
 [display]
-width = 1920
-height = 1080
+width = 844
+height = 390
 high_dpi = 1
 

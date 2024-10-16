@@ -1,6 +1,7 @@
 Object = require "modules/classic"
 helper = require "canvas.canvas_helper"
 utils = require "modules/utils"
+camera = require "orthographic.camera"
 
 Drawer = Object:extend()
 
@@ -13,6 +14,7 @@ end
 
 
 function Drawer:init()
+
     msg.post(".", "acquire_input_focus")
     msg.post("@render:", "clear_color", {color = vmath.vector4(1, 1, 1, 1)})
 
@@ -89,7 +91,7 @@ function Drawer:draw_line(x, y)
   -- the current touch local world_pos = go.get_world_position()position0
   while length > 0 do
     local r, g, b, a = helper.color_vector_to_bytes(self.current_color)
-    drawpixels.filled_circle(self.buffer_info, pos.x, pos.y, 10, r, g, b, a, true)
+    drawpixels.filled_circle(self.buffer_info, pos.x, pos.y, 5, r, g, b, a, false)
     self.dirty = true
     pos = pos - dir
     length = length - 1
@@ -111,8 +113,10 @@ function Drawer:_reigster_input(pressed, released, x, y)
   end
 
   local world_pos = go.get_world_position()
-  if utils.point_within_rectangle_centroid(x, y, world_pos.x, world_pos.y, self.width, self.height) then
-    self:draw_line(x, y)
+  local pos = camera.screen_to_world(hash("/camera"), vmath.vector3(x,y,0))
+
+  if utils.point_within_rectangle_centroid(pos.x, pos.y, world_pos.x, world_pos.y, self.width, self.height) then
+    self:draw_line(pos.x, pos.y)
   end 
 end
 
@@ -125,6 +129,16 @@ function Drawer:on_input(action_id, action)
       self:_reigster_input(touchdata.pressed, touchdata.released, touchdata.x, touchdata.y)
     end
   end
+end
+
+
+function Drawer:final()
+  self:clear()
+end
+
+function Drawer:clear()
+  drawpixels.fill(self.buffer_info, 0, 0, 0, 0)
+  resource.set_texture(self.resource_path, self.header, self.buffer_info.buffer)
 end
 
 

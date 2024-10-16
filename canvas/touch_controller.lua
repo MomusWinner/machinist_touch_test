@@ -17,15 +17,17 @@ function TouchController:new(count)
 end
 
 
-function TouchController:set_input(input)
-    if input.released then
+function TouchController:set_input(released, pressed, world_x, world_y)
+    if released then
         self:reset() -- TODO invoked for left and right canvas
-    elseif input.pressed then
+    elseif pressed then
         -- some logic
     end
+    local pos = camera.screen_to_world(hash("/camera"), vmath.vector3(world_x, world_y,0))
 
-    local new_input = vmath.vector3(input.x, input.y, 0)
+    local new_input = vmath.vector3(pos.x, pos.y, 0)
     if new_input == self.inputs[self:previous_index()] then
+        print("same -----------")
         return
     end
     self.inputs[self:next_index()] = new_input

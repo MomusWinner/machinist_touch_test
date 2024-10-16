@@ -1,0 +1,39 @@
+script: "/main/start_menu.gui_script"
+fonts {
+  name: "russian_font"
+  font: "/fonts/russian_font.font"
+}
+nodes {
+  position {
+    x: 422.0
+    y: 195.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_BOX
+  id: "start_button"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_TEXT
+  text: "\320\235\320\260\321\207\320\260\321\202\321\214\n"
+  ""
+  font: "russian_font"
+  id: "text"
+  parent: "start_button"
+  inherit_alpha: true
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT

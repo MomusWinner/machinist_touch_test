@@ -3,7 +3,7 @@ canvas_data = require "canvas.canvas_data"
 
 function init(self)
     print("init left")
-    self.canvas = Drawer(512, 512, "#left_sprite")
+    self.canvas = Drawer(260, 260, "#left_sprite")
     canvas_data.left_canvas = self.canvas
 end
 
@@ -20,4 +20,8 @@ end
 
 function on_input(self, action_id, action)
     self.canvas:on_input(action_id, action)
+end
+
+function final(self)
+    self.canvas:final()
 end

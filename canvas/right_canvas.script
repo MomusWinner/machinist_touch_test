@@ -1,8 +1,9 @@
 Drawer = require "canvas.canvas"
-
+canvas_data = require "canvas.canvas_data"
 
 function init(self)
-	self.canvas = Drawer(512, 512, "#right_sprite")
+	self.canvas = Drawer(260, 260, "#right_sprite")
+	canvas_data.right_canvas = self.canvas
 end 
 
 
@@ -18,4 +19,9 @@ end
 
 function on_input(self, action_id, action)
 	self.canvas:on_input(action_id, action)
+end
+
+
+function final(self)
+	self.canvas:final()
 end

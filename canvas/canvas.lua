@@ -5,10 +5,12 @@ utils = require "modules/utils"
 
 Canvas = Drawer:extend()
 
-CORRRECT_DIR_ANGLE = 30
+local CANVAS_MANAGER = "canvas_manager#canvas_manager"
+CAMERA = "/camera"
+CORRRECT_DIR_ANGLE = 50
 DESTINATION_TO_POINT_DISTANSE = 40
 
-GAME_STATES = {
+CANVAS_STATES = {
   Init = 1,
   Draw = 2,
   End = 3
@@ -20,12 +22,13 @@ function Canvas:new(width, height, sprite)
   self.current_point = nil -- table
   self.next_point = nil -- table
 
-  self.touch_controller = TouchController(10)
+  self.touch_controller = TouchController(14)
 
   self.current_touch_pos = vmath.vector3(0,0,0) --vector3
   self.is_pressing = false --bool
   self.start_drawing = false -- bool
-  self.state = GAME_STATES.Init
+  self.state = CANVAS_STATES.Init
+  self.speed = 0
 end
 
 
@@ -35,12 +38,14 @@ end
 function Canvas:start_canvas(name, schema, projection)
   self.points = schema.points
   self:creat_points()
-  local point = self:select_random_point()
-  self:show_point(point)
+  local start_point = self:select_random_point()
+  self:show_point(start_point)
   print(projection)
   msg.post("#projection", "play_animation", {id = hash(projection)})
-  self.current_point = point
-  self.state = GAME_STATES.Init
+  self.current_point = start_point
+  self.state = CANVAS_STATES.Init
+  self.speed = 0
+  self.previous_touch_pos = nil
 end
 
 
@@ -48,14 +53,35 @@ function Canvas:on_message(message_id, message, sender)
   if message_id == hash("start_canvas") then
     self:start_canvas(message.name, message.poin_scheme, message.projection)
   end
+  if message_id == hash("set_error_state") then
+    self:set_error_state()
+  end
 end
 
 
 function Canvas:update(dt)
-  if self.state == GAME_STATES.Draw then
+  if self.state == CANVAS_STATES.Draw then
+    self:calculate_speed(dt)
     Drawer.super.update(self, dt)
     self:process_drawing()
   end
+end
+
+
+function Canvas:final()
+  Drawer.super.final(self)
+end
+
+
+function Canvas:calculate_speed(dt)
+  if self.previous_touch_pos == nil then
+    self.speed = 0
+  else
+    local dist_length = vmath.length(self.current_touch_pos - self.previous_touch_pos)
+    self.speed = (self.speed + (dist_length/dt))/2
+    -- print("speed  " .. self.speed)
+  end 
+  self.previous_touch_pos = self.current_touch_pos
 end
 
 
@@ -79,20 +105,19 @@ function Canvas:process_drawing()
   if self.current_point ~= nil and self.next_point ~= nil and self.touch_controller.dir ~= nil then
     is_correct_path = self:is_correct_movement_direction()
     if is_correct_path then
-      self:set_game_state(GAME_STATES.Draw)
+      self:set_game_state(CANVAS_STATES.Draw)
     else
-      self:set_game_state(GAME_STATES.End)
+      self:set_game_state(CANVAS_STATES.End)
     end
   end
 end
 
 ---@param state integer
 function Canvas:set_game_state(state)
-  if state == GAME_STATES.Draw then
+  if state == CANVAS_STATES.Draw then
     msg.post("#bg", "play_animation", {id = hash("draw_background")})
-  elseif state == GAME_STATES.End  then
-    self.state = GAME_STATES.End
-    msg.post("#bg", "play_animation", {id = hash("red_background")})
+  elseif state == CANVAS_STATES.End  then
+    msg.post(CANVAS_MANAGER, "bad_drawing")
   end
 end
 
@@ -103,7 +128,6 @@ function Canvas:pointer_inside_some_point()
   end
   for _, point in ipairs(self.points) do
     if vmath.length(self.current_touch_pos - self:_cube_pos_to_global(point.x, point.y)) < DESTINATION_TO_POINT_DISTANSE then
-      print("distance " ..vmath.length(self.current_touch_pos - self:_cube_pos_to_global(point.x, point.y)))
       return true
     end
   end
@@ -112,20 +136,22 @@ end
 
 
 function Canvas:on_input(action_id, action)
-  if self.state == GAME_STATES.Draw then
+  if self.state == CANVAS_STATES.Draw then
     Drawer.super.on_input(self, action_id, action)
   end
   local canvas_pos = go.get_world_position()
   if action_id == hash("multi_touch") then
     for _, touchdata in ipairs(action.touch) do
-      if utils.point_within_rectangle_centroid(touchdata.x, touchdata.y, canvas_pos.x, canvas_pos.y, self.width, self.height) then
+      local pos = camera.screen_to_world(hash("/camera"), vmath.vector3(touchdata.x,touchdata.y,0))
+      if utils.point_within_rectangle_centroid(pos.x, pos.y, canvas_pos.x, canvas_pos.y, self.width, self.height) then
         self:process_input(touchdata)
         break
       end
     end
   end
   if action_id == hash("touch") then
-    if utils.point_within_rectangle_centroid(action.x, action.y, canvas_pos.x, canvas_pos.y, self.width, self.height) then
+    local pos = camera.screen_to_world(hash("/camera"), vmath.vector3(action.x, action.y,0))
+    if utils.point_within_rectangle_centroid(pos.x, pos.y, canvas_pos.x, canvas_pos.y, self.width, self.height) then
       self:process_input(action)
     end
   end
@@ -138,19 +164,25 @@ function Canvas:process_input(input)
   elseif input.pressed then
     self.is_pressing = true
   end
-  if self.state == GAME_STATES.Init then
+  local pos = camera.screen_to_world(hash("/camera"), vmath.vector3(input.x, input.y,0))
+  if self.state == CANVAS_STATES.Init then
     local point_pos = self:_cube_pos_to_global(self.current_point.x, self.current_point.y)
-    local touch_in_start_point = utils.point_within_rectangle_centroid(input.x, input.y,
+    local touch_in_start_point = utils.point_within_rectangle_centroid(pos.x, pos.y,
       point_pos.x, point_pos.y, DESTINATION_TO_POINT_DISTANSE * 2, DESTINATION_TO_POINT_DISTANSE * 2)
     if touch_in_start_point then
-      self.state = GAME_STATES.Draw
-      print("Game state draw")
+      self.state = CANVAS_STATES.Draw
     else
-      print("Game state end")
+      --
     end
   end
-  self.touch_controller:set_input(input)
-  self.current_touch_pos = vmath.vector3(input.x, input.y, 0)
+  self.touch_controller:set_input(input.released, input.pressed, pos.x, pos.y)
+  self.current_touch_pos = vmath.vector3(pos.x, pos.y, 0)
+end
+
+
+function Canvas:set_error_state()
+  self.state = CANVAS_STATES.End
+  -- msg.post("#bg", "play_animation", {id = hash("red_background")})
 end
 
 
@@ -166,7 +198,7 @@ function Canvas:clean_points()
     return
   else
     self.point_views = {} -- TODO remove old points
-  end 
+  end
 end
 
 
@@ -182,8 +214,8 @@ end
 
 
 function Canvas:select_random_point()
-  math.randomseed(os.time())
 	local rand_index = math.random(1, utils.len(self.points))
+  print("random index: " .. rand_index)
   return self.points[rand_index]
 end
 
@@ -203,7 +235,6 @@ function Canvas:point_in_touch_dir(pos)
   local dir1 = self.touch_controller.dir
   local dir2 = pos - self.current_touch_pos
   local angle = (utils.angle_between_vector(dir1, dir2))
-  -- print("angle " .. angle .. "| dir1" .. dir1)
   if angle < CORRRECT_DIR_ANGLE then
     return true
   end
