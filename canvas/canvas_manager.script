@@ -3,6 +3,8 @@ register_shapes = require "shapes/register_shapes"
 utils = require "modules/utils"
 camera = require "orthographic.camera"
 
+
+GUI = "gui"
 LEFT_CANVAS = "left_canvas#left_canvas"
 RIGHT_CANVAS = "right_canvas#right_canvas"
 SHAPES_FOLDER = "/shapes"
@@ -10,7 +12,7 @@ MAX_SPEED_DIFF = 400
 
 GAME_STATE = {
 	Init = 1,
-	Drawing = 2,
+	Draw = 2,
 	End = 3
 }
 
@@ -19,18 +21,18 @@ function init(self)
 	msg.post(LEFT_CANVAS, "get_canvas")
 	msg.post(RIGHT_CANVAS, "get_canvas")
 	self.state = GAME_STATE.Init
+	self.ready_count = 0
+	self.complete_count = 0
 	start_game(self)
 end
 
 function update(self, dt)
-	if self.state == GAME_STATE.Init then
-		start_game(self)
-	end
-	if self.state == GAME_STATE.Drawing then
+	if self.state == GAME_STATE.Draw then
 		local left_speed = canvas_data.left_canvas.speed
 		local right_speed = canvas_data.right_canvas.speed
 		if math.abs(left_speed - right_speed) > MAX_SPEED_DIFF then
 			set_error_state(self)
+			msg.post(GUI, "error", {msg = "Рисуйте фигуры с одинаковой скоростью"})
 		end
 	end
 end
@@ -56,8 +58,8 @@ function start_game(self)
 	init_data.name = shape.name
 	init_data.projection = shape.projection_id
 	msg.post(LEFT_CANVAS, "start_canvas", init_data)
-	self.state = GAME_STATE.Drawing
 end
+
 
 function is_init(self)
 	if self.right_canvas ~= nil and self.left_canvac ~= nil then
@@ -66,9 +68,30 @@ function is_init(self)
 	return false
 end
 
+
 function on_message(self, message_id, message, sender)
 	if message_id == hash("bad_drawing") then
 		set_error_state(self)
+		msg.post(GUI, "error", {msg = "Неверная фигура"})
+	elseif  message_id == hash("ready") then
+		print("ready")
+		self.ready_count = self.ready_count + 1
+		if self.ready_count >= 2 then -- 2
+		  msg.post(LEFT_CANVAS, "draw")
+		  msg.post(RIGHT_CANVAS, "draw")
+		  self.state = GAME_STATE.Draw
+		end
+	elseif message_id == hash("not_ready") then
+		self.ready_count = self.ready_count - 1
+	elseif message_id == hash("raised_finger") then
+		set_error_state(self)
+		msg.post(GUI, "error", {msg = "Не отпускайте палец c экрана"})
+	elseif message_id == hash("complete") then
+		self.complete_count = self.complete_count +1
+		if self.complete_count >= 2 then --2
+			msg.post(LEFT_CANVAS, "success_end")
+			msg.post(RIGHT_CANVAS, "success_end")
+		end
 	end
 end
 
@@ -76,6 +99,6 @@ end
 function set_error_state(self)
 	msg.post(LEFT_CANVAS, "set_error_state")
 	msg.post(RIGHT_CANVAS, "set_error_state")
-	-- camera.shake(hash("/camera"), 0.05,0.2,1, function() end)
+	camera.shake(hash("/camera"), 0.05,0.2,1, function() end)
 	self.state = GAME_STATE.End
 end
