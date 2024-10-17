@@ -22,7 +22,7 @@ function Drawer:init()
     local channels = 4
     -- we have to create table with next fields: buffer, width, height, channels
     self.buffer_info = {
-        buffer = buffer.create(self.width * self.height, {{name = hash("rgba"), type = buffer.VALUE_TYPE_UINT8, count = channels}}),
+        buffer = buffer.create(self.width * self.height, {{name = hash("rgba"), type = buffer.VALUE_TYPE_UINT64, count = channels}}),
         width = self.width,
         height = self.height,
         channels = channels -- 3 for rgb, 4 for rgba
