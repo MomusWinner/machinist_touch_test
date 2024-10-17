@@ -9,6 +9,8 @@ end
 function init(self)
 	self.druid = druid.new(self)
 	self.druid:new_button("reload", reload_game)
+
+	self.error = self.druid:new_text("error")
 end
 
 
@@ -24,6 +26,14 @@ end
 
 function on_message(self, message_id, message, sender)
 	self.druid:on_message(message_id, message, sender)
+
+	if message_id == hash("error") then
+		print("get_error ".. message.msg)
+		self.error:set_to(message.msg)
+		timer.delay(3, false, function()
+			self.error:set_to("")
+		end)
+	end
 end
 
 

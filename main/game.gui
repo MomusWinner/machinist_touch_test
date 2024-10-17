@@ -10,7 +10,7 @@ fonts {
 nodes {
   position {
     x: 422.0
-    y: 313.0
+    y: 180.0
   }
   size {
     x: 250.0
@@ -37,6 +37,25 @@ nodes {
   font: "russian_font"
   id: "text"
   parent: "reload"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 426.0
+    y: 328.0
+  }
+  size {
+    x: 500.0
+    y: 100.0
+  }
+  color {
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_TEXT
+  font: "russian_font"
+  id: "error"
+  line_break: true
   inherit_alpha: true
 }
 material: "/builtins/materials/gui.material"
