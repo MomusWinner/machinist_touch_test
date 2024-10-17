@@ -4,4 +4,7 @@ images {
 images {
   image: "/canvas/red_background.png"
 }
+images {
+  image: "/canvas/green_background.png"
+}
 extrude_borders: 2
