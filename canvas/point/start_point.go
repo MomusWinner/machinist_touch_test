@@ -1,3 +1,7 @@
+components {
+  id: "start_point"
+  component: "/canvas/point/start_point.script"
+}
 embedded_components {
   id: "sprite"
   type: "sprite"
