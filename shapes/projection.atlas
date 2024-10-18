@@ -4,4 +4,16 @@ images {
 images {
   image: "/shapes/triangle/triangle.png"
 }
+images {
+  image: "/shapes/straight_triangle/straight_triangle.png"
+}
+images {
+  image: "/shapes/rhomb/rhomb.png"
+}
+images {
+  image: "/shapes/bird/bird.png"
+}
+images {
+  image: "/shapes/strange_quadrangle/strange_quadrangle.png"
+}
 extrude_borders: 2
