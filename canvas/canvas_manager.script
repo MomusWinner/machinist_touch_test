@@ -17,7 +17,7 @@ GAME_STATE = {
 }
 
 function init(self)
-	msg.post("@render:", "use_fixed_fit_projection")
+	camera.use_projector(hash("/camera"), camera.PROJECTOR.FIXED_AUTO)
 	msg.post(LEFT_CANVAS, "get_canvas")
 	msg.post(RIGHT_CANVAS, "get_canvas")
 	self.state = GAME_STATE.Init
