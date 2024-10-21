@@ -8,7 +8,7 @@ GUI = "gui"
 LEFT_CANVAS = "left_canvas#left_canvas"
 RIGHT_CANVAS = "right_canvas#right_canvas"
 SHAPES_FOLDER = "/shapes"
-MAX_SPEED_DIFF = 400
+MAX_SPEED_DIFF = 200
 
 GAME_STATE = {
 	Init = 1,
@@ -28,8 +28,8 @@ end
 
 function update(self, dt)
 	if self.state == GAME_STATE.Draw then
-		local left_speed = canvas_data.left_canvas.speed
-		local right_speed = canvas_data.right_canvas.speed
+		local left_speed = math.abs(canvas_data.left_canvas.speed)
+		local right_speed = math.abs(canvas_data.right_canvas.speed)
 		if math.abs(left_speed - right_speed) > MAX_SPEED_DIFF then
 			set_error_state(self)
 			msg.post(GUI, "error", {msg = "Рисуйте фигуры с одинаковой скоростью"})
@@ -39,13 +39,11 @@ end
 
 local function choose_random_shape()
 	local shapes = register_shapes:get_shapes()
-	local rand_index = math.random(1, utils.len(shapes))
-	print(rand_index)
+	local rand_index = utils.rnd(1, #shapes)
 	return shapes[rand_index]
 end
 
 function start_game(self)
-	math.randomseed(os.clock()*100000000000)
 	local shape = choose_random_shape()
 	local init_data = {}
 	init_data.poin_scheme = json.decode(sys.load_resource(shape.path_to_scheme))
@@ -76,7 +74,7 @@ function on_message(self, message_id, message, sender)
 	elseif  message_id == hash("ready") then
 		print("ready")
 		self.ready_count = self.ready_count + 1
-		if self.ready_count >= 2 then -- 2
+		if self.ready_count >= 1 then -- 2
 		  msg.post(LEFT_CANVAS, "draw")
 		  msg.post(RIGHT_CANVAS, "draw")
 		  self.state = GAME_STATE.Draw
