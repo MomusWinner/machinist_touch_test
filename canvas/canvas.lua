@@ -92,8 +92,8 @@ function Canvas:final()
 end
 
 local function lerpdt(from, to, rate, dt)
-	local diff = from - to           -- Target value is just an offset. Remove it and add it back.
-	return diff * (1 - rate)^dt + to -- Flip rate so it's the expected direction (0 = no change).
+	local diff = from - to
+	return diff * (1 - rate)^dt + to
 end
 
 function Canvas:calculate_speed(dt)

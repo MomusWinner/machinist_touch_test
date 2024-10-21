@@ -80,4 +80,24 @@ function M.rnd(from, to)
 end
 
 
+function M.distance_point_to_segment(p1, p2, p)
+  local normalize_segment = vmath.normalize(p2 - p1)
+  local point_to_first_segment_p = p - p1
+  local dot1 = vmath.dot(point_to_first_segment_p, normalize_segment)
+
+  if dot1 <= 0 then
+      return vmath.length(p - p1)
+  end
+  local c2 = vmath.dot(p2 - p1, normalize_segment)
+  if c2 <= dot1 then
+      return vmath.length(p - p2)
+  end
+
+  local b = dot1 / c2
+  local pb = p1 + b * (p2 - p1)
+
+  return vmath.length(p - pb)
+end
+
+
 return M

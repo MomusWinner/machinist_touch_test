@@ -1,8 +1,8 @@
-Drawer = require "canvas.canvas"
+local Canvas = require "canvas/canvas"
 canvas_data = require "canvas.canvas_data"
 
 function init(self)
-	self.canvas = Drawer(260, 260, "#right_sprite")
+	self.canvas = Canvas(512, 512, 260, 260, "#right_sprite", Canvas.TYPES.Right)
 	canvas_data.right_canvas = self.canvas
 end 
 

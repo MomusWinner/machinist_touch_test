@@ -58,5 +58,45 @@ nodes {
   line_break: true
   inherit_alpha: true
 }
+nodes {
+  position {
+    x: 744.0
+    y: 286.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.502
+    z: 0.0
+  }
+  type: TYPE_TEXT
+  text: "\321\201\320\272\320\276\321\200\320\276\321\201\321\202\321\214: 0"
+  font: "russian_font"
+  id: "right_speed"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 100.0
+    y: 286.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.502
+    z: 0.0
+  }
+  type: TYPE_TEXT
+  text: "\321\201\320\272\320\276\321\200\320\276\321\201\321\202\321\214: 0"
+  font: "russian_font"
+  id: "left_speed"
+  inherit_alpha: true
+}
 material: "/builtins/materials/gui.material"
 adjust_reference: ADJUST_REFERENCE_PARENT

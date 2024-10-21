@@ -3,9 +3,11 @@ helper = require "canvas.canvas_helper"
 utils = require "modules/utils"
 camera = require "orthographic.camera"
 
-Drawer = Object:extend()
+Canvas = Object:extend()
 
-function Drawer:new(width, height, sprite)
+function Canvas:new(texture_width, texture_height, width, height, sprite)
+  self.texture_width = texture_width
+  self.texture_height = texture_height
   self.sprite = sprite
   self.width = width
   self.height = height
@@ -13,7 +15,7 @@ function Drawer:new(width, height, sprite)
 end
 
 
-function Drawer:init()
+function Canvas:init()
 
     msg.post(".", "acquire_input_focus")
     msg.post("@render:", "clear_color", {color = vmath.vector4(1, 1, 1, 1)})
@@ -22,9 +24,9 @@ function Drawer:init()
     local channels = 4
     -- we have to create table with next fields: buffer, width, height, channels
     self.buffer_info = {
-        buffer = buffer.create(self.width * self.height, {{name = hash("rgba"), type = buffer.VALUE_TYPE_UINT64, count = channels}}),
-        width = self.width,
-        height = self.height,
+        buffer = buffer.create(self.texture_width * self.texture_height, {{name = hash("rgba"), type = buffer.VALUE_TYPE_UINT64, count = channels}}),
+        width = self.texture_width,
+        height = self.texture_height,
         channels = channels -- 3 for rgb, 4 for rgba
     }
     self.dirty = true
@@ -35,8 +37,8 @@ function Drawer:init()
     self.prev_pos = nil
     self.resource_path = go.get(self.sprite, "texture0")
     self.header = {
-        width = self.width,
-        height = self.height,
+        width = self.texture_width,
+        height = self.texture_height,
         type = resource.TEXTURE_TYPE_2D,
         format = resource.TEXTURE_FORMAT_RGBA,
         num_mip_maps = 1
@@ -46,7 +48,7 @@ function Drawer:init()
 end
 
 
-function Drawer:update(dt)
+function Canvas:update(dt)
   -- update texture if it's dirty (ie we've drawn to it)
   if self.dirty then
     resource.set_texture(self.resource_path, self.header, self.buffer_info.buffer)
@@ -61,13 +63,15 @@ end
 
 ---@param x float
 ---@param y float
-function Drawer:_position_by_offest(x, y)
+function Canvas:_position_by_offest(x, y)
     local world_pos = go.get_world_position()
-    return vmath.vector3(x - world_pos.x + self.width/2, y - world_pos.y + self.height/2, 0)
+    local x = (x - world_pos.x + self.width/2) * (self.texture_width/ self.width)
+    local y = (y - world_pos.y + self.height/2) * (self.texture_width/ self.width)
+    return vmath.vector3(x, y, 0)
 end
 
 
-function Drawer:draw_line(x, y)
+function Canvas:draw_line(x, y)
   local pos = self:_position_by_offest(x, y)
 
   local length = 1
@@ -91,7 +95,7 @@ function Drawer:draw_line(x, y)
   -- the current touch local world_pos = go.get_world_position()position0
   while length > 0 do
     local r, g, b, a = helper.color_vector_to_bytes(self.current_color)
-    drawpixels.filled_circle(self.buffer_info, pos.x, pos.y, 5, r, g, b, a, false)
+    drawpixels.filled_circle(self.buffer_info, pos.x, pos.y, 15, r, g, b, a, false)
     self.dirty = true
     pos = pos - dir
     length = length - 1
@@ -103,7 +107,7 @@ end
 ---@param released bool
 ---@param x float 
 ---@param y float 
-function Drawer:_reigster_input(pressed, released, x, y)
+function Canvas:_reigster_input(pressed, released, x, y)
   if pressed then self.drawing = true
   elseif released then self.drawing = false end
 
@@ -120,7 +124,7 @@ function Drawer:_reigster_input(pressed, released, x, y)
   end 
 end
 
-function Drawer:on_input(action_id, action)
+function Canvas:on_input(action_id, action)
   if action_id == hash("touch") then
     self:_reigster_input(action.pressed, action.released, action.x, action.y)
   end
@@ -132,18 +136,18 @@ function Drawer:on_input(action_id, action)
 end
 
 
-function Drawer:final()
+function Canvas:final()
   self:clear()
 end
 
-function Drawer:clear()
+function Canvas:clear()
   drawpixels.fill(self.buffer_info, 0, 0, 0, 0)
   resource.set_texture(self.resource_path, self.header, self.buffer_info.buffer)
 end
 
 
-function Drawer:__tostring()
+function Canvas:__tostring()
   return "Drawer" .. "width " .. self.width .. ", height " .. self.height
 end
 
-return Drawer
+return Canvas

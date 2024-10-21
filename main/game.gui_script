@@ -1,5 +1,5 @@
 local druid = require("druid.druid")
-
+local Canvas = require "canvas/canvas"
 
 function reload_game()
 	msg.post("main:/loader#loader", "reload_game")
@@ -11,6 +11,8 @@ function init(self)
 	self.druid:new_button("reload", reload_game)
 
 	self.error = self.druid:new_text("error")
+	self.left_speed = self.druid:new_text("left_speed")
+	self.right_speed = self.druid:new_text("right_speed")
 end
 
 
@@ -33,6 +35,13 @@ function on_message(self, message_id, message, sender)
 		timer.delay(3, false, function()
 			self.error:set_to("")
 		end)
+	end
+	if message_id == hash("update_speed") then
+		if message.type == Canvas.TYPES.Left then
+			self.left_speed:set_to("скорость: " .. math.floor(message.speed+0.5))
+		else
+			self.right_speed:set_to("скорость: " .. math.floor(message.speed+0.5))
+		end
 	end
 end
 

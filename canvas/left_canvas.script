@@ -1,9 +1,9 @@
-Drawer = require "canvas.canvas"
+local Canvas = require "canvas/canvas"
 canvas_data = require "canvas.canvas_data"
 
 function init(self)
     print("init left")
-    self.canvas = Drawer(260, 260, "#left_sprite")
+    self.canvas = Canvas(512, 512, 260, 260, "#left_sprite", Canvas.TYPES.Left)
     canvas_data.left_canvas = self.canvas
 end
 
