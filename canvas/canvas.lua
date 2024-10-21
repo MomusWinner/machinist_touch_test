@@ -1,17 +1,17 @@
-Drawer = require "canvas.drawer"
+Canvas = require "canvas.drawer"
 TouchController = require "canvas.touch_controller"
 helper = require "canvas.canvas_helper"
 utils = require "modules/utils"
 
-Canvas = Drawer:extend()
 
-local CANVAS_MANAGER = "canvas_manager#canvas_manager"
+Canvas = Canvas:extend()
+
 CAMERA = "/camera"
-CORRRECT_DIR_ANGLE = 20
-EKSTRA_DIR_ANGLE = 80
 
-DESTINATION_TO_POINT_DISTANSE = 25
-SAVE_LINE_DISTANCE = 20
+Canvas.TYPES = {
+  Left = 1,
+  Right = 2,
+}
 
 CANVAS_STATES = {
   Init = 1,
@@ -19,10 +19,17 @@ CANVAS_STATES = {
   End = 3
 }
 
-function Canvas:new(width, height, sprite)
-  print("distance -----" .. distance_point_to_segment(vmath.vector3(1, 1, 0), vmath.vector3(0, 0, 0), vmath.vector3(0,1,0)))
+local CORRRECT_DIR_ANGLE = 40
+local EKSTRA_DIR_ANGLE = 80
 
-  Drawer.super.new(self, width, height, sprite)
+local DESTINATION_TO_POINT_DISTANSE = 30
+local SAVE_LINE_DISTANCE = 25
+
+local CANVAS_MANAGER = "canvas_manager#canvas_manager"
+
+function Canvas:new(texture_width, texture_height, width, height, sprite, type)
+  Canvas.super.new(self, texture_width, texture_height, width, height, sprite)
+  self.type = type --Canvas.TYPES
   self.points = nil -- table
   self.current_point = nil -- table
   self.next_point = nil -- table
@@ -74,23 +81,28 @@ end
 function Canvas:update(dt)
   if self.state == CANVAS_STATES.Draw then
     self:calculate_speed(dt)
-    Drawer.super.update(self, dt)
+    Canvas.super.update(self, dt)
     self:process_drawing()
   end
 end
 
 
 function Canvas:final()
-  Drawer.super.final(self)
+  Canvas.super.final(self)
 end
 
+local function lerpdt(from, to, rate, dt)
+	local diff = from - to           -- Target value is just an offset. Remove it and add it back.
+	return diff * (1 - rate)^dt + to -- Flip rate so it's the expected direction (0 = no change).
+end
 
 function Canvas:calculate_speed(dt)
   if self.previous_touch_pos == nil then
     self.speed = 0
   else
     local dist_length = vmath.length(self.current_touch_pos - self.previous_touch_pos)
-    self.speed = (self.speed + (dist_length/dt))/2
+    self.speed =  lerpdt(self.speed, dist_length/dt, 0.93, dt)
+    msg.post(GUI, "update_speed", {speed = self.speed, type = self.type})
   end 
   self.previous_touch_pos = self.current_touch_pos
 end
@@ -112,7 +124,7 @@ function Canvas:process_drawing()
     self.touch_controller:reset()
   end
 
-  -- TODO need optimization
+
   if self.current_point ~= nil and self.next_point ~= nil and self.touch_controller.dir ~= nil then
     is_correct_dir = self:is_correct_movement_direction()
     is_correct_dist = self:is_correct_distance_from_line()
@@ -149,7 +161,7 @@ end
 
 function Canvas:on_input(action_id, action)
   if self.state == CANVAS_STATES.Draw then
-    Drawer.super.on_input(self, action_id, action)
+    Canvas.super.on_input(self, action_id, action)
   end
   local canvas_pos = go.get_world_position()
   if action_id == hash("multi_touch") then
@@ -177,7 +189,6 @@ function Canvas:process_input(input)
     self.is_pressing = true
   end
 
-
   if not self.is_pressing and self.state == CANVAS_STATES.Draw then
     msg.post(CANVAS_MANAGER, "raised_finger")
   end
@@ -185,7 +196,7 @@ function Canvas:process_input(input)
   if self.state == CANVAS_STATES.Init then
     local point_pos = self:_cube_pos_to_global(self.current_point.x, self.current_point.y)
     local touch_in_start_point = utils.point_within_rectangle_centroid(pos.x, pos.y,
-      point_pos.x, point_pos.y, DESTINATION_TO_POINT_DISTANSE * 2, DESTINATION_TO_POINT_DISTANSE * 2)
+      point_pos.x, point_pos.y, 20 * 2, 20 * 2)
     if touch_in_start_point then
       if not self.is_ready then
         msg.post(CANVAS_MANAGER, "ready")
@@ -218,7 +229,7 @@ function Canvas:clean_points()
     self.point_views = {}
     return
   else
-    self.point_views = {} -- TODO remove old points
+    self.point_views = {}
   end
 end
 
@@ -235,8 +246,7 @@ end
 
 
 function Canvas:select_random_point()
-	local rand_index = math.random(1, utils.len(self.points))
-  print("random index: " .. rand_index)
+	local rand_index = utils.rnd(1, #self.points)
   return self.points[rand_index]
 end
 
@@ -302,8 +312,6 @@ end
 
 function Canvas:count_complete_point()
   self.completed_point_count = self.completed_point_count + 1
-  print("points count: " .. #self.points)
-  print("completed point count: " .. self.completed_point_count)
   if self.completed_point_count >= #self.points + 1 then
     msg.post(CANVAS_MANAGER, "complete")
   end
@@ -330,32 +338,11 @@ function Canvas:get_point_by_id(id)
 end
 
 
-
 function Canvas:is_correct_distance_from_line()
   local cur_p = self:_cube_pos_to_global(self.current_point.x, self.current_point.y)
   local next_p = self:_cube_pos_to_global(self.next_point.x, self.next_point.y)
-  return SAVE_LINE_DISTANCE > distance_point_to_segment(cur_p, next_p, self.current_touch_pos)
+  return SAVE_LINE_DISTANCE > utils.distance_point_to_segment(cur_p, next_p, self.current_touch_pos)
 end
-
-function distance_point_to_segment(p1, p2, p)
-  local v = vmath.normalize(p2 - p1)
-  local w = p - p1
-  local c1 = vmath.dot(w, v)
-
-  if c1 <= 0 then
-      return vmath.length(p - p1)
-  end
-  local c2 = vmath.dot(p2 - p1, v)
-  if c2 <= c1 then
-      return vmath.length(p - p2)
-  end
-
-  local b = c1 / c2
-  local pb = p1 + b * (p2 - p1)
-
-  return vmath.length(p - pb)
-end
-
 
 
 return Canvas
