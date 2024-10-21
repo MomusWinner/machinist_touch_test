@@ -24,7 +24,7 @@ function Canvas:init()
     local channels = 4
     -- we have to create table with next fields: buffer, width, height, channels
     self.buffer_info = {
-        buffer = buffer.create(self.texture_width * self.texture_height, {{name = hash("rgba"), type = buffer.VALUE_TYPE_UINT64, count = channels}}),
+        buffer = buffer.create(self.texture_width * self.texture_height, {{name = hash("rgba"), type = buffer.VALUE_TYPE_INT8, count = channels}}),
         width = self.texture_width,
         height = self.texture_height,
         channels = channels -- 3 for rgb, 4 for rgba

@@ -26,7 +26,7 @@ function TouchController:set_input(released, pressed, world_x, world_y)
     local pos = camera.screen_to_world(hash("/camera"), vmath.vector3(world_x, world_y,0))
 
     local new_input = vmath.vector3(pos.x, pos.y, 0)
-    if self.inputs[self:previous_index()] and vmath.length(new_input - self.inputs[self:previous_index()]) < 1 then
+    if self.inputs[self:previous_index()] and vmath.length(new_input - self.inputs[self:previous_index()]) < 5 then
         return
     end
     self.inputs[self:next_index()] = new_input
