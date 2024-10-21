@@ -44,14 +44,6 @@ function M.point_within_rectangle_centroid(point_x, point_y, rectangle_x, rectan
   return false
 end
 
----@param table table
----@return integer
-function M.len(table)
-  local length = 0
-  for _, _ in pairs(table) do length = length + 1 end
-  return length
-end
-
 
 function M.has_value(table, target)
   for index, value in ipairs(table) do
@@ -71,6 +63,20 @@ function M.angle_between_vector(vector1, vector2)
     return 360 - angle
   end
   return angle
+end
+
+
+local start_seed = tonumber(hash_to_hex(hash(os.tmpname())), 16)
+math.randomseed( start_seed)
+math.random()
+math.random()
+
+function M.rnd(from, to)
+  local seed = os.time() + (os.clock()*1000000) + math.random(0, 65535)
+	math.randomseed(seed)
+	math.random()
+	math.random()
+	return math.random(from, to)
 end
 
 
