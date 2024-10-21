@@ -74,7 +74,7 @@ function on_message(self, message_id, message, sender)
 	elseif  message_id == hash("ready") then
 		print("ready")
 		self.ready_count = self.ready_count + 1
-		if self.ready_count >= 1 then -- 2
+		if self.ready_count >= 2 then -- 2
 		  msg.post(LEFT_CANVAS, "draw")
 		  msg.post(RIGHT_CANVAS, "draw")
 		  self.state = GAME_STATE.Draw
