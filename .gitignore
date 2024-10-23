@@ -7,5 +7,5 @@ Thumbs.db
 *.pyc
 .project
 .cproject
-.vscode
+*.vscode
 builtins
