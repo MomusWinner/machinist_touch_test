@@ -1,4 +1,3 @@
 images {
   image: "/main/background.jpg"
 }
-extrude_borders: 2
