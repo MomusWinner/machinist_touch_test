@@ -1,7 +1,7 @@
-canvas_data = require "canvas.canvas_data"
-register_shapes = require "shapes/register_shapes"
-utils = require "modules/utils"
-camera = require "orthographic.camera"
+local canvas_data = require "canvas.canvas_data"
+local register_shapes = require "shapes/register_shapes"
+local utils = require "modules/utils"
+local camera = require "orthographic.camera"
 
 
 GUI = "gui"
@@ -23,8 +23,10 @@ function init(self)
 	self.state = GAME_STATE.Init
 	self.ready_count = 0
 	self.complete_count = 0
+	self.first_end = 0
 	start_game(self)
 end
+
 
 function update(self, dt)
 	if self.state == GAME_STATE.Draw then
@@ -37,58 +39,59 @@ function update(self, dt)
 	end
 end
 
+
 local function choose_random_shape()
 	local shapes = register_shapes:get_shapes()
 	local rand_index = utils.rnd(1, #shapes)
 	return shapes[rand_index]
 end
 
-function start_game(self)
+
+---@param canvas string path to canvas
+function start_canvas(canvas)
 	local shape = choose_random_shape()
 	local init_data = {}
-	init_data.poin_scheme = json.decode(sys.load_resource(shape.path_to_scheme))
+	init_data.point_scheme = json.decode(sys.load_resource(shape.path_to_scheme))
 	init_data.name = shape.name
 	init_data.projection = shape.projection_id
-	msg.post(RIGHT_CANVAS, "start_canvas", init_data)
-	local shape = choose_random_shape()
-	local init_data = {}
-	init_data.poin_scheme = json.decode(sys.load_resource(shape.path_to_scheme))
-	init_data.name = shape.name
-	init_data.projection = shape.projection_id
-	msg.post(LEFT_CANVAS, "start_canvas", init_data)
+	msg.post(canvas, "start_canvas", init_data)
 end
 
-
-function is_init(self)
-	if self.right_canvas ~= nil and self.left_canvac ~= nil then
-		return true
-	end
-	return false
+function start_game(self)
+	start_canvas(LEFT_CANVAS)
+	start_canvas(RIGHT_CANVAS)
 end
 
 
 function on_message(self, message_id, message, sender)
-	if message_id == hash("bad_drawing") then
+	if message_id == hash("bad_drawing") then        -- bad_drawing
 		set_error_state(self)
 		msg.post(GUI, "error", {msg = "Неверная фигура"})
-	elseif  message_id == hash("ready") then
-		print("ready")
+	elseif  message_id == hash("ready") then         -- ready
 		self.ready_count = self.ready_count + 1
 		if self.ready_count >= 1 then -- 2
 		  msg.post(LEFT_CANVAS, "draw")
 		  msg.post(RIGHT_CANVAS, "draw")
 		  self.state = GAME_STATE.Draw
 		end
-	elseif message_id == hash("not_ready") then
+	elseif message_id == hash("not_ready") then      -- not_ready
 		self.ready_count = self.ready_count - 1
-	elseif message_id == hash("raised_finger") then
+	elseif message_id == hash("raised_finger") then  -- raised_finger
 		set_error_state(self)
 		msg.post(GUI, "error", {msg = "Не отпускайте палец c экрана"})
-	elseif message_id == hash("complete") then
+	elseif message_id == hash("complete") then       -- complete
 		self.complete_count = self.complete_count +1
+		if self.complete_count == 1 then
+			self.first_end = os.time()
+		end
 		if self.complete_count >= 1 then --2
-			msg.post(LEFT_CANVAS, "success_end")
-			msg.post(RIGHT_CANVAS, "success_end")
+			if (os.time() - self.first_end) <= 1 then -- todo
+				msg.post(LEFT_CANVAS, "success_end")
+				msg.post(RIGHT_CANVAS, "success_end")
+			else
+				msg.post(GUI, "error", {msg = "Рисуйте фигуры с одинаковой скоростью"})
+				set_error_state()
+			end
 		end
 	end
 end
@@ -97,6 +100,6 @@ end
 function set_error_state(self)
 	msg.post(LEFT_CANVAS, "set_error_state")
 	msg.post(RIGHT_CANVAS, "set_error_state")
-	camera.shake(hash("/camera"), 0.05,0.2,1, function() end)
+	camera.shake(hash("/camera"), 0.05, 0.2,1, function() end)
 	self.state = GAME_STATE.End
 end

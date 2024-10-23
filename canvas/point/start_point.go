@@ -5,7 +5,7 @@ components {
 embedded_components {
   id: "sprite"
   type: "sprite"
-  data: "default_animation: \"blue_cable_point\"\n"
+  data: "default_animation: \"start_point\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
@@ -13,8 +13,8 @@ embedded_components {
   "}\n"
   ""
   scale {
-    x: 0.3
-    y: 0.3
-    z: 0.3
+    x: 0.6
+    y: 0.6
+    z: 0.6
   }
 }

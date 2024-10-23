@@ -1,51 +1,62 @@
-Canvas = require "canvas.drawer"
-TouchController = require "canvas.touch_controller"
-helper = require "canvas.canvas_helper"
-utils = require "modules/utils"
+local Object = require "modules/classic"
+local utils = require "modules/utils"
+local Point = require "canvas.point.point"
+local camera = require "orthographic.camera"
 
 
-Canvas = Canvas:extend()
+---@class Canvas
+Canvas = Object:extend()
 
 CAMERA = "/camera"
 
+---@enum canvas_types
 Canvas.TYPES = {
   Left = 1,
   Right = 2,
 }
 
+---@enum canvas_states
 CANVAS_STATES = {
   Init = 1,
   Draw = 2,
   End = 3
 }
 
-local CORRRECT_DIR_ANGLE = 90
-local EKSTRA_DIR_ANGLE = 160
-
-local DESTINATION_TO_POINT_DISTANSE = 40
-local SAVE_LINE_DISTANCE = 50
+local DESTINATION_TO_POINT_DISTANCE = 40
 
 local CANVAS_MANAGER = "canvas_manager#canvas_manager"
 
-function Canvas:new(texture_width, texture_height, width, height, sprite, type)
-  Canvas.super.new(self, texture_width, texture_height, width, height, sprite)
-  self.type = type --Canvas.TYPES
-  self.points = nil -- table
-  self.current_point = nil -- table
-  self.next_point = nil -- table
-  self.completed_point_count = 0 -- number
 
-  self.touch_controller = TouchController(6)
+local function cube_pos_to_global(x, y, width, height)
+  local world_pos = go.get_world_position()
+  return vmath.vector3(world_pos.x - width/2 + x, world_pos.y - height/2 + y, 0)
+end
 
-  self.current_touch_pos = vmath.vector3(0,0,0) --vector3
-  self.previous_touch_pos = nil --vector3|nil
-  self.is_pressing = false -- bool
-  self.start_drawing = false -- bool
-  self.state = CANVAS_STATES.Init
-  self.speed = 0 -- float
-  self.is_ready = false -- boool
 
-  self.first_point_obj = nil -- string id
+---@param width integer
+---@param height integer
+---@param type canvas_types
+function Canvas:new(width, height, type)
+  msg.post(".", "acquire_input_focus")
+  self.width = width                            ---@type integer
+  self.height = height                          ---@type integer
+
+  self.type = type                              ---@type canvas_types
+  self.points = {}                              ---@type { [string]: Point }
+  self.current_point = nil                      ---@type Point
+  self.start_point = nil                        ---@type Point
+  self.current_line = nil                       ---@type string go id
+  self.completed_point_ids = {}                 ---@type integer[]
+
+  self.current_touch_pos = vmath.vector3(0,0,0) ---@type vector3
+  self.previous_touch_pos = nil                 ---@type vector3?
+
+  self.is_pressing = false                      ---@type boolean
+  self.state = CANVAS_STATES.Init               ---@type canvas_states  
+
+  self.speed = 0                                ---@type number
+  self.is_ready = false                         ---@type boolean
+  self.first_point_obj = nil                    ---@type string go id
 end
 
 
@@ -53,50 +64,126 @@ end
 ---@param schema table
 ---@param projection string
 function Canvas:start_canvas(name, schema, projection)
-  self.points = schema.points
-  self:creat_points()
+  self:set_points(schema.points)
+  self:create_points()
   local start_point = self:select_random_point()
   self:create_first_point_obj(start_point)
   msg.post("#projection", "play_animation", {id = hash(projection)})
-  self.current_point = start_point
+  self:set_current_point(start_point)
+  self.start_point = start_point
   self.state = CANVAS_STATES.Init
 end
 
 
+---@param new_points Point
+function Canvas:set_points(new_points)
+  for _, point in ipairs(new_points) do
+    local world_pos = cube_pos_to_global(point.x, point.y, self.width, self.height)
+    local new_point = Point(point.id, vmath.vector3(world_pos.x, world_pos.y, 0), point.relation)
+    self.points[point.id] = new_point
+  end
+end
+
+
+---@param position vector3
+function Canvas:create_line(position)
+  position.z = 0.5
+  local line = factory.create("#line_factory")
+  go.set_position(position, line)
+  return line
+end
+
+
 function Canvas:on_message(message_id, message, sender)
-  if message_id == hash("start_canvas") then
-    self:start_canvas(message.name, message.poin_scheme, message.projection)
-  elseif message_id == hash("set_error_state") then
+  if message_id == hash("start_canvas") then        -- start_canvas
+    self:start_canvas(message.name, message.point_scheme, message.projection)
+  elseif message_id == hash("set_error_state") then -- set_error_state
     self:set_error_state()
-  elseif message_id == hash("draw") then
+  elseif message_id == hash("draw") then            -- draw
     self.state = CANVAS_STATES.Draw
     self:clear_first_point_obj()
-  elseif message_id == hash("success_end") then
+  elseif message_id == hash("success_end") then     -- success_end
     msg.post("#bg", "play_animation", {id=hash("green_background")})
     self.state = CANVAS_STATES.End
   end
 end
 
 
+---@param target_position vector3
+function Canvas:update_line(target_position)
+  local dist2d = function(x1, y1, x2, y2) return ((x2-x1)^2+(y2-y1)^2)^0.5 end
+  local angle_of_vector_between_two_points = function(x1,y1, x2,y2) return math.atan2(y2-y1, x2-x1) end
+
+  local position = go.get_world_position(self.current_line)
+  local distance = dist2d(position.x, position.y, target_position.x, target_position.y)
+  local scale = go.get_scale(self.current_line)
+  if distance > 0 then
+    scale.x = distance
+  end
+  go.set_scale(scale, self.current_line)
+  local direction = angle_of_vector_between_two_points(position.x, position.y, target_position.x, target_position.y)
+  local rotation = vmath.quat_rotation_z(direction)
+  go.set_rotation(rotation, self.current_line)
+end
+
+
 function Canvas:update(dt)
   if self.state == CANVAS_STATES.Draw then
-    self:calculate_speed(dt)
-    Canvas.super.update(self, dt)
-    self:process_drawing()
+    if self.current_touch_pos ~= nil then
+      if vmath.length(self.current_touch_pos) ~= 0 then
+        self:update_line(self.current_touch_pos)
+      end
+    end
+
+    local point = self:pointer_inside_some_point()
+    if point ~= nil then
+      if self:is_next_point(point) then
+        self:set_current_point(point)
+      end
+    end
+
+    if self:is_incorrect() then
+      msg.post(CANVAS_MANAGER ,"bad_drawing")
+    elseif self:is_done() then
+      self:set_current_point(self.start_point)
+      msg.post(CANVAS_MANAGER ,"complete")
+    end
   end
 end
 
 
-function Canvas:final()
-  Canvas.super.final(self)
+function Canvas:is_incorrect()
+  local point = self:pointer_inside_some_point()
+  if point == nil or point == self.current_point then
+    return false
+  end
+  if not utils.has_value(self.current_point.relation, point.id) then
+    return true
+  end
+  return false
 end
 
-local function lerpdt(from, to, rate, dt)
-	local diff = from - to
-	return diff * (1 - rate)^dt + to
+
+---@param new_point Point
+function Canvas:set_current_point(new_point)
+  if self.current_point ~= nil then
+    self:update_line(new_point.pos)
+  end
+  self.current_point = new_point
+  self.current_line = self:create_line(new_point.pos)
+  table.insert(self.completed_point_ids, self.current_point.id)
 end
+
+function Canvas:final()
+end
+
 
 function Canvas:calculate_speed(dt)
+  local function lerpdt(from, to, rate, dt)
+    local diff = from - to
+    return diff * (1 - rate)^dt + to
+  end
+
   if self.previous_touch_pos == nil then
     self.speed = 0
   else
@@ -108,50 +195,16 @@ function Canvas:calculate_speed(dt)
 end
 
 
-function Canvas:process_drawing()
-  if self.next_point == nil then
-    self:try_select_first_next_point()
-  end
-
-  if self.next_point ~= nil and self.current_point ~= nil then
-    local next_pos = self:_cube_pos_to_global(self.next_point.x, self.next_point.y)
-    if vmath.length(self.current_touch_pos - next_pos) < DESTINATION_TO_POINT_DISTANSE then
-      self:set_new_next_point()
+---@param point Point
+function Canvas:is_next_point(point)
+  for _, id in ipairs(self.completed_point_ids) do
+    if point.id == id then
+      return false
     end
   end
 
-  if self:pointer_inside_some_point() then
-    self.touch_controller:reset()
-  end
-
-
-  if self.current_point ~= nil and self.next_point ~= nil and self.touch_controller.dir ~= nil then
-    is_correct_dir = self:is_correct_movement_direction()
-    is_correct_dist = self:is_correct_distance_from_line()
-
-    local is_correct_draw = false
-
-    if is_correct_dir then
-      is_correct_draw = true
-    elseif is_correct_dist and self:is_correct_movement_direction(EKSTRA_DIR_ANGLE) then
-      is_correct_draw = true
-    end
-
-    if is_correct_draw then
-      msg.post("#bg", "play_animation", {id = hash("draw_background")})
-    else
-      msg.post(CANVAS_MANAGER, "bad_drawing")
-    end
-  end
-end
-
-
-function Canvas:pointer_inside_some_point()
-  if self.points == nil then
-    return false
-  end
-  for _, point in ipairs(self.points) do
-    if vmath.length(self.current_touch_pos - self:_cube_pos_to_global(point.x, point.y)) < DESTINATION_TO_POINT_DISTANSE then
+  for _, id in ipairs(point.relation) do
+    if id == self.current_point.id then
       return true
     end
   end
@@ -159,16 +212,40 @@ function Canvas:pointer_inside_some_point()
 end
 
 
-function Canvas:on_input(action_id, action)
-  if self.state == CANVAS_STATES.Draw then
-    Canvas.super.on_input(self, action_id, action)
+function Canvas:is_done()
+  if #self.completed_point_ids == #self.points then
+      local point_pos = self.start_point.pos
+      local touch_in_start_point = utils.point_within_rectangle_centroid(
+        self.current_touch_pos.x, self.current_touch_pos.y,
+        point_pos.x, point_pos.y,
+        DESTINATION_TO_POINT_DISTANCE * 2, DESTINATION_TO_POINT_DISTANCE * 2)
+      return touch_in_start_point
   end
+  return false
+end
+
+
+function Canvas:pointer_inside_some_point()
+  if self.points == nil then
+    return nil
+  end
+  for _, point in ipairs(self.points) do
+    local distance_to_point = self.current_touch_pos - point.pos
+    if vmath.length(distance_to_point) < DESTINATION_TO_POINT_DISTANCE then
+      return point
+    end
+  end
+  return nil
+end
+
+
+function Canvas:on_input(action_id, action)
   local canvas_pos = go.get_world_position()
   if action_id == hash("multi_touch") then
-    for _, touchdata in ipairs(action.touch) do
-      local pos = camera.screen_to_world(hash("/camera"), vmath.vector3(touchdata.x,touchdata.y,0))
+    for _, touch_data in ipairs(action.touch) do
+      local pos = camera.screen_to_world(hash("/camera"), vmath.vector3(touch_data.x,touch_data.y,0))
       if utils.point_within_rectangle_centroid(pos.x, pos.y, canvas_pos.x, canvas_pos.y, self.width, self.height) then
-        self:process_input(touchdata)
+        self:process_input(touch_data)
         break
       end
     end
@@ -194,7 +271,7 @@ function Canvas:process_input(input)
   end
   local pos = camera.screen_to_world(hash("/camera"), vmath.vector3(input.x, input.y,0))
   if self.state == CANVAS_STATES.Init then
-    local point_pos = self:_cube_pos_to_global(self.current_point.x, self.current_point.y)
+    local point_pos = self.current_point.pos
     local touch_in_start_point = utils.point_within_rectangle_centroid(pos.x, pos.y,
       point_pos.x, point_pos.y, 20 * 2, 20 * 2)
     if touch_in_start_point then
@@ -207,7 +284,6 @@ function Canvas:process_input(input)
       self.is_ready = false
     end
   end
-  self.touch_controller:set_input(input.released, input.pressed, pos.x, pos.y)
   self.current_touch_pos = vmath.vector3(pos.x, pos.y, 0)
 end
 
@@ -218,30 +294,12 @@ function Canvas:set_error_state()
 end
 
 
-function Canvas:_cube_pos_to_global(x, y)
-  local world_pos = go.get_world_position()
-  return vmath.vector3(world_pos.x - self.width/2 + x, world_pos.y - self.height/2 + y, 0)
-end
-
-
-function Canvas:clean_points()
-  if self.point_views == nil then
-    self.point_views = {}
-    return
-  else
-    self.point_views = {}
+function Canvas:create_points()
+  for _, point in ipairs(self.points) do
+    local pos = point.pos
+    pos.z = 0.9
+    factory.create("#point_factory", pos, nil)
   end
-end
-
-
-function Canvas:creat_points()
-  -- self:clean_points()
-  -- for _, point in ipairs(self.points) do
-  --   local pos = self:_cube_pos_to_global(point.x, point.y)
-  --   pos.z = 0.9
-  --   local id = factory.create("#point_factory", pos, nil)
-  --   table.insert(self.point_views, id)
-  -- end
 end
 
 
@@ -251,8 +309,9 @@ function Canvas:select_random_point()
 end
 
 
+---@param point Point
 function Canvas:create_first_point_obj(point)
-  local pos = self:_cube_pos_to_global(point.x, point.y)
+  local pos = point.pos
   pos.z = 1
   self.first_point_obj = factory.create("#start_point_factory", pos, nil)
 end
@@ -262,86 +321,6 @@ function Canvas:clear_first_point_obj()
   if self.first_point_obj then
     go.delete(self.first_point_obj)
   end
-end
-
-
-function Canvas:point_in_touch_dir(pos, target_angle)
-  if self.touch_controller.dir == nil then return false end
-  if target_angle == nil then target_angle = CORRRECT_DIR_ANGLE end
-  local dir1 = self.touch_controller.dir
-  local dir2 = pos - self.current_touch_pos
-  local angle = (utils.angle_between_vector(dir1, dir2))
-  if angle < target_angle then
-    return true
-  end
-  return false
-end
-
-
-function Canvas:try_select_first_next_point()
-  if self.current_touch_pos == nil or self.current_point == nil or self.touch_controller.dir == nil then
-    return
-  end
-
-  for _, point in ipairs(self.points) do
-    if point then
-      if utils.has_value(point.relation, self.current_point.id) then
-        local selected = self:point_in_touch_dir(self:_cube_pos_to_global(point.x, point.y))
-        if selected then
-          self.next_point = point
-          self:count_complete_point()
-          break;
-        end
-      end
-    end
-  end
-end
-
-
-function Canvas:set_new_next_point()
-  for _, id in ipairs(self.next_point.relation) do
-    if id ~= self.current_point.id then
-      self.current_point = self.next_point
-      self.next_point = self:get_point_by_id(id)
-      self:count_complete_point()
-      break;
-    end
-  end
-end
-
-
-function Canvas:count_complete_point()
-  self.completed_point_count = self.completed_point_count + 1
-  if self.completed_point_count >= #self.points + 1 then
-    msg.post(CANVAS_MANAGER, "complete")
-  end
-end
-
-
-function Canvas:is_correct_movement_direction(angle)
-  local pos = self:_cube_pos_to_global(self.next_point.x, self.next_point.y)
-  if self:point_in_touch_dir(pos, angle) then
-    return true
-  end
-  return false
-end
-
-
----@param id integer
-function Canvas:get_point_by_id(id)
-  for _, value in ipairs(self.points) do
-    if value.id == id then
-      return value
-    end
-  end
-  return nil
-end
-
-
-function Canvas:is_correct_distance_from_line()
-  local cur_p = self:_cube_pos_to_global(self.current_point.x, self.current_point.y)
-  local next_p = self:_cube_pos_to_global(self.next_point.x, self.next_point.y)
-  return SAVE_LINE_DISTANCE > utils.distance_point_to_segment(cur_p, next_p, self.current_touch_pos)
 end
 
 

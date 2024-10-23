@@ -2,8 +2,7 @@ local Canvas = require "canvas/canvas"
 canvas_data = require "canvas.canvas_data"
 
 function init(self)
-    print("init left")
-    self.canvas = Canvas(512, 512, 260, 260, "#left_sprite", Canvas.TYPES.Left)
+    self.canvas = Canvas(260, 260)
     canvas_data.left_canvas = self.canvas
 end
 
