@@ -43,9 +43,9 @@ function Canvas:new(width, height, type)
 
   self.type = type                              ---@type canvas_types
   self.points = {}                              ---@type { [string]: Point }
-  self.current_point = nil                      ---@type Point
-  self.start_point = nil                        ---@type Point
-  self.current_line = nil                       ---@type string go id
+  self.current_point = nil                      ---@type Point?
+  self.start_point = nil                        ---@type Point?
+  self.current_line = nil                       ---@type string? go id
   self.completed_point_ids = {}                 ---@type integer[]
 
   self.current_touch_pos = vmath.vector3(0,0,0) ---@type vector3
@@ -56,7 +56,7 @@ function Canvas:new(width, height, type)
 
   self.speed = 0                                ---@type number
   self.is_ready = false                         ---@type boolean
-  self.first_point_obj = nil                    ---@type string go id
+  self.first_point_obj = nil                    ---@type string? go id
 end
 
 
