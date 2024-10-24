@@ -70,12 +70,12 @@ local start_seed = tonumber(hash_to_hex(hash(os.tmpname())), 16)
 math.randomseed( start_seed)
 math.random()
 math.random()
+local seed = os.time() + (os.clock()*1000000) + math.random(0, 65535)
+math.randomseed(seed)
+math.random()
+math.random()
 
 function M.rnd(from, to)
-  local seed = os.time() + (os.clock()*1000000) + math.random(0, 65535)
-	math.randomseed(seed)
-	math.random()
-	math.random()
 	return math.random(from, to)
 end
 

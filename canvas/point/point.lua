@@ -1,7 +1,7 @@
 local Object = require "modules/classic"
 
-
-local Point = Object:extend() ---@class Point
+---@class Point
+local Point = Object:extend()
 
 
 ---@param id integer

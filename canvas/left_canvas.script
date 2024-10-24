@@ -1,14 +1,17 @@
 local Canvas = require "canvas/canvas"
-canvas_data = require "canvas.canvas_data"
+local canvas_data = require "canvas.canvas_data"
 
 function init(self)
-    self.canvas = Canvas(260, 260)
-    canvas_data.left_canvas = self.canvas
 end
 
 
 function on_message(self, message_id, message, sender)
-    self.canvas:on_message(message_id, message, sender)
+    if message_id == hash("start_canvas") then        -- start_canvas
+        set_new_canvas(self)
+        self.canvas:on_message(message_id, message, sender)
+    else
+        self.canvas:on_message(message_id, message, sender)
+    end
 end
 
 
@@ -23,4 +26,13 @@ end
 
 function final(self)
     self.canvas:final()
+end
+
+
+function set_new_canvas(self)
+    if self.canvas ~= nil then
+        self.canvas:final()
+    end
+    self.canvas = Canvas(260, 260)
+    canvas_data.left_canvas = self.canvas
 end

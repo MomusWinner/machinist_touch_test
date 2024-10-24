@@ -1,4 +1,4 @@
 images {
-  image: "/canvas/black_line.png"
+  image: "/canvas/line.png"
 }
 extrude_borders: 2

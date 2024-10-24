@@ -57,6 +57,7 @@ function Canvas:new(width, height, type)
   self.speed = 0                                ---@type number
   self.is_ready = false                         ---@type boolean
   self.first_point_obj = nil                    ---@type string? go id
+  self.delete_on_finish_go = {}                 ---@type string[]
 end
 
 
@@ -86,6 +87,14 @@ end
 
 
 function Canvas:final()
+  while #self.delete_on_finish_go ~= 0 do
+    local d_go = table.remove(self.delete_on_finish_go)
+    print(d_go)
+    go.delete(d_go, true)
+  end
+  if self.first_point_obj then
+    go.delete(self.first_point_obj, true)
+  end
 end
 
 
@@ -133,6 +142,7 @@ function Canvas:start_canvas(name, schema, projection)
   local start_point = self:select_random_point()
   self:create_first_point_obj(start_point)
   msg.post("#projection", "play_animation", {id = hash(projection)})
+  msg.post("#bg", "play_animation", {id = hash("draw_background")})
   self:set_current_point(start_point)
   self.start_point = start_point
   self.state = CANVAS_STATES.Init
@@ -183,6 +193,7 @@ function Canvas:create_line(position)
   position.z = 0.5
   local line = factory.create("#line_factory")
   go.set_position(position, line)
+  table.insert(self.delete_on_finish_go, line)
   return line
 end
 
@@ -299,7 +310,8 @@ function Canvas:create_points()
   for _, point in ipairs(self.points) do
     local pos = point.pos
     pos.z = 0.9
-    factory.create("#point_factory", pos, nil)
+    local id = factory.create("#point_factory", pos, nil)
+    table.insert(self.delete_on_finish_go, id)
   end
 end
 
@@ -321,6 +333,7 @@ end
 function Canvas:clear_first_point_obj()
   if self.first_point_obj then
     go.delete(self.first_point_obj)
+    self.first_point_obj = nil
   end
 end
 

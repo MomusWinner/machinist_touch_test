@@ -2,7 +2,8 @@ local druid = require("druid.druid")
 local Canvas = require "canvas/canvas"
 
 function reload_game()
-	msg.post("main:/loader#loader", "reload_game")
+	msg.post("/canvas_manager", "restart_game")
+	-- msg.post("main:/loader#loader", "reload_game")
 end
 
 

@@ -77,6 +77,7 @@ nodes {
   font: "russian_font"
   id: "right_speed"
   inherit_alpha: true
+  visible: false
 }
 nodes {
   position {
@@ -97,6 +98,7 @@ nodes {
   font: "russian_font"
   id: "left_speed"
   inherit_alpha: true
+  visible: false
 }
 material: "/builtins/materials/gui.material"
 adjust_reference: ADJUST_REFERENCE_PARENT

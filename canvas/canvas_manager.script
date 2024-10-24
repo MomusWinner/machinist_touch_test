@@ -3,7 +3,6 @@ local register_shapes = require "shapes/register_shapes"
 local utils = require "modules/utils"
 local camera = require "orthographic.camera"
 
-
 GUI = "gui"
 LEFT_CANVAS = "left_canvas#left_canvas"
 RIGHT_CANVAS = "right_canvas#right_canvas"
@@ -17,27 +16,20 @@ GAME_STATE = {
 }
 
 function init(self)
-	camera.use_projector(hash("/camera"), camera.PROJECTOR.FIXED_AUTO)
-	msg.post(LEFT_CANVAS, "get_canvas")
-	msg.post(RIGHT_CANVAS, "get_canvas")
-	self.state = GAME_STATE.Init
-	self.ready_count = 0
-	self.complete_count = 0
-	self.first_end = 0
 	start_game(self)
 end
 
 
-function update(self, dt)
-	if self.state == GAME_STATE.Draw then
-		local left_speed = math.abs(canvas_data.left_canvas.speed)
-		local right_speed = math.abs(canvas_data.right_canvas.speed)
-		if math.abs(left_speed - right_speed) > MAX_SPEED_DIFF then
-			set_error_state(self)
-			msg.post(GUI, "error", {msg = "Рисуйте фигуры с одинаковой скоростью"})
-		end
-	end
-end
+-- function update(self, dt)
+-- 	if self.state == GAME_STATE.Draw then
+-- 		local left_speed = math.abs(canvas_data.left_canvas.speed)
+-- 		local right_speed = math.abs(canvas_data.right_canvas.speed)
+-- 		if math.abs(left_speed - right_speed) > MAX_SPEED_DIFF then
+-- 			set_error_state(self)
+-- 			msg.post(GUI, "error", {msg = "Рисуйте фигуры с одинаковой скоростью"})
+-- 		end
+-- 	end
+-- end
 
 
 local function choose_random_shape()
@@ -58,6 +50,10 @@ function start_canvas(canvas)
 end
 
 function start_game(self)
+	self.state = GAME_STATE.Init
+	self.ready_count = 0
+	self.complete_count = 0
+	self.first_end = 0
 	start_canvas(LEFT_CANVAS)
 	start_canvas(RIGHT_CANVAS)
 end
@@ -90,9 +86,11 @@ function on_message(self, message_id, message, sender)
 				msg.post(RIGHT_CANVAS, "success_end")
 			else
 				msg.post(GUI, "error", {msg = "Рисуйте фигуры с одинаковой скоростью"})
-				set_error_state()
+				set_error_state(self)
 			end
 		end
+	elseif message_id == hash("restart_game")  then
+		start_game(self)
 	end
 end
 
