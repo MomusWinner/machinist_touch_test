@@ -162,7 +162,7 @@ function Canvas:process_input(input)
   if self.state == CANVAS_STATES.Init then
     local point_pos = self.current_point.pos
     local touch_in_start_point = utils.point_within_rectangle_centroid(pos.x, pos.y,
-      point_pos.x, point_pos.y, 20 * 2, 20 * 2)
+      point_pos.x, point_pos.y, DESTINATION_TO_POINT_DISTANCE * 2, DESTINATION_TO_POINT_DISTANCE * 2)
     if touch_in_start_point then
       if not self.is_ready then
         msg.post(CANVAS_MANAGER, "ready")
