@@ -1,0 +1,6 @@
+images {
+  image: "/gui/bar-chart.png"
+}
+images {
+  image: "/gui/reject.png"
+}

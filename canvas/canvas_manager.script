@@ -2,6 +2,8 @@ local canvas_data = require "canvas.canvas_data"
 local register_shapes = require "shapes/register_shapes"
 local utils = require "modules/utils"
 local camera = require "orthographic.camera"
+local statistics = require "statistics/statistics"
+
 
 GUI = "gui"
 LEFT_CANVAS = "left_canvas#left_canvas"
@@ -65,7 +67,7 @@ function on_message(self, message_id, message, sender)
 		msg.post(GUI, "error", {msg = "Неверная фигура"})
 	elseif  message_id == hash("ready") then         -- ready
 		self.ready_count = self.ready_count + 1
-		if self.ready_count >= 1 then -- 2
+		if self.ready_count >= 2 then -- 2
 		  msg.post(LEFT_CANVAS, "draw")
 		  msg.post(RIGHT_CANVAS, "draw")
 		  self.state = GAME_STATE.Draw
@@ -80,10 +82,9 @@ function on_message(self, message_id, message, sender)
 		if self.complete_count == 1 then
 			self.first_end = os.time()
 		end
-		if self.complete_count >= 1 then --2
+		if self.complete_count >= 2 then --2
 			if (os.time() - self.first_end) <= 1 then -- todo
-				msg.post(LEFT_CANVAS, "success_end")
-				msg.post(RIGHT_CANVAS, "success_end")
+				set_success_stat(self)
 			else
 				msg.post(GUI, "error", {msg = "Рисуйте фигуры с одинаковой скоростью"})
 				set_error_state(self)
@@ -95,7 +96,16 @@ function on_message(self, message_id, message, sender)
 end
 
 
+
+function set_success_stat(self)
+	statistics.update_statistics(statistics.GAME_STATUS.WIN)
+	msg.post(LEFT_CANVAS, "success_end")
+	msg.post(RIGHT_CANVAS, "success_end")
+	self.state = GAME_STATE.End
+end
+
 function set_error_state(self)
+	statistics.update_statistics(statistics.GAME_STATUS.LOSE)
 	msg.post(LEFT_CANVAS, "set_error_state")
 	msg.post(RIGHT_CANVAS, "set_error_state")
 	camera.shake(hash("/camera"), 0.05, 0.2,1, function() end)

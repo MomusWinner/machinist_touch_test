@@ -1,4 +1,4 @@
-script: "/main/start_menu.gui_script"
+script: "/gui/start_menu.gui_script"
 fonts {
   name: "russian_font"
   font: "/fonts/russian_font.font"

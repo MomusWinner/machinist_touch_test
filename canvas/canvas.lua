@@ -89,7 +89,6 @@ end
 function Canvas:final()
   while #self.delete_on_finish_go ~= 0 do
     local d_go = table.remove(self.delete_on_finish_go)
-    print(d_go)
     go.delete(d_go, true)
   end
   if self.first_point_obj then

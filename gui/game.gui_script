@@ -1,4 +1,5 @@
-local druid = require("druid.druid")
+local druid = require "druid.druid"
+local statistics = require "statistics/statistics"
 local Canvas = require "canvas/canvas"
 
 function reload_game()
@@ -7,13 +8,44 @@ function reload_game()
 end
 
 
+function close_statistics_window(self)
+	gui.set_enabled(self.statistics, false)
+	-- self.statistics:set_enabled(false)
+end
+
+
+function open_statistics_window(self)
+	gui.set_enabled(self.statistics, true)
+	update_statics_text(self)
+	-- self.statistics:set_enabled(true)
+end
+
+
+function update_statics_text(self)
+	self.win_text:set_to("Правильно нарисовано: " .. statistics.get_win_statistics())
+	self.lose_text:set_to("Нарисовано с ошибкой: " .. statistics.get_lose_statistics())
+end
+
+
+function init_statistics(self)
+	self.druid:new_blocker("statistics")
+	self.statistics = gui.get_node("statistics")
+	self.druid:new_button("statistics_exit", close_statistics_window)
+	self.win_text = self.druid:new_text("win_text")
+	self.lose_text = self.druid:new_text("lose_text")
+	close_statistics_window(self)
+end
+
+
 function init(self)
 	self.druid = druid.new(self)
 	self.druid:new_button("reload", reload_game)
-
+	self.druid:new_button("open_statistics_button", open_statistics_window)
 	self.error = self.druid:new_text("error")
 	self.left_speed = self.druid:new_text("left_speed")
 	self.right_speed = self.druid:new_text("right_speed")
+	
+	init_statistics(self)
 end
 
 

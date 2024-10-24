@@ -1,0 +1,266 @@
+script: "/gui/game.gui_script"
+fonts {
+  name: "default"
+  font: "/builtins/fonts/debug/always_on_top.font"
+}
+fonts {
+  name: "russian_font"
+  font: "/fonts/russian_font.font"
+}
+fonts {
+  name: "russian_font_small"
+  font: "/fonts/russian_font_small.font"
+}
+textures {
+  name: "gui"
+  texture: "/gui/gui.atlas"
+}
+nodes {
+  position {
+    x: 422.0
+    y: 180.0
+  }
+  size {
+    x: 200.0
+    y: 68.0
+  }
+  type: TYPE_BOX
+  id: "reload"
+  layer: "layer1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  scale {
+    x: 0.2
+    y: 0.2
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_TEXT
+  text: "\320\237\320\265\321\200\320\265\320\267\320\260\320\277\321\203\321\201\321\202\320\270\321\202\321\214\n"
+  ""
+  font: "russian_font"
+  id: "text"
+  parent: "reload"
+  layer: "layer1"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 426.0
+    y: 328.0
+  }
+  size {
+    x: 500.0
+    y: 100.0
+  }
+  color {
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_TEXT
+  font: "russian_font"
+  id: "error"
+  line_break: true
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 744.0
+    y: 286.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.502
+    z: 0.0
+  }
+  type: TYPE_TEXT
+  text: "\321\201\320\272\320\276\321\200\320\276\321\201\321\202\321\214: 0"
+  font: "russian_font"
+  id: "right_speed"
+  inherit_alpha: true
+  visible: false
+}
+nodes {
+  position {
+    x: 100.0
+    y: 286.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.502
+    z: 0.0
+  }
+  type: TYPE_TEXT
+  text: "\321\201\320\272\320\276\321\200\320\276\321\201\321\202\321\214: 0"
+  font: "russian_font"
+  id: "left_speed"
+  inherit_alpha: true
+  visible: false
+}
+nodes {
+  position {
+    x: 794.0
+    y: 340.0
+  }
+  size {
+    x: 50.0
+    y: 50.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  texture: "gui/bar-chart"
+  id: "open_statistics_button"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 421.0
+    y: 204.0
+  }
+  size {
+    x: 500.0
+    y: 300.0
+  }
+  type: TYPE_BOX
+  id: "statistics"
+  layer: "layer2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 110.98166
+  }
+  scale {
+    x: 0.4
+    y: 0.4
+    z: 0.4
+  }
+  size {
+    x: 200.0
+    y: 30.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_TEXT
+  text: "\320\241\321\202\320\260\321\202\320\270\321\201\321\202\320\270\320\272\320\260"
+  font: "russian_font"
+  id: "Title"
+  outline {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+  line_break: true
+  parent: "statistics"
+  layer: "layer3"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: -190.0
+    y: 6.0
+  }
+  scale {
+    x: 0.3
+    y: 0.3
+    z: 0.1
+  }
+  size {
+    x: 1000.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_TEXT
+  text: "\320\237\321\200\320\260\320\262\320\270\320\273\321\214\320\275\320\276 \320\275\320\260\321\200\320\270\321\201\320\276\320\262\320\260\320\275\320\276: 0"
+  font: "russian_font_small"
+  id: "win_text"
+  pivot: PIVOT_W
+  parent: "statistics"
+  layer: "layer3"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 211.0
+    y: 112.0
+  }
+  scale {
+    x: 0.7
+    y: 0.7
+    z: 0.7
+  }
+  type: TYPE_BOX
+  texture: "gui/reject"
+  id: "statistics_exit"
+  parent: "statistics"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -190.0
+    y: -59.0
+  }
+  scale {
+    x: 0.3
+    y: 0.3
+    z: 0.1
+  }
+  size {
+    x: 1000.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_TEXT
+  text: "\320\235\320\260\321\200\320\270\321\201\320\276\320\262\320\260\320\275\320\276 \321\201 \320\276\321\210\320\270\320\261\320\272\320\276\320\271: 0"
+  font: "russian_font_small"
+  id: "lose_text"
+  pivot: PIVOT_W
+  parent: "statistics"
+  layer: "layer3"
+  inherit_alpha: true
+}
+layers {
+  name: "layer1"
+}
+layers {
+  name: "layer2"
+}
+layers {
+  name: "layer3"
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT
